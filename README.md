@@ -1,46 +1,81 @@
-# Getting Started with Create React App
+# Nani's Essentials — Inventory, Sales, Purchases, Analytics
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A local-first SPA to manage cosmetics inventory, purchases, and sales with lightweight analytics. Data is stored in the browser (localStorage) with backup import/export.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- Inventory: CRUD, images, pricing helpers, search, stock badges
+- Purchases: multi-line, tax/shipping/weight, payment date, quick-add item
+- Sales: multi-line, min price default, installments, buyer autocomplete, delete lines
+- Sales Mgmt: grouped by buyer with search, expand/collapse, stats
+- Analytics: popular and price extremes, total sales, inventory value
+- Backup: localStorage, JSON export/import, legacy import support
 
-### `npm start`
+## Tech Stack
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- React 19 + TypeScript
+- CRA (react-scripts)
+- LocalStorage for persistence
+- Lightweight, dependency-minimal design
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## Getting Started
 
-### `npm test`
+Prerequisites:
+- Node.js 18+ (or latest LTS)
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Install and run:
 
-### `npm run build`
+```bash
+npm install
+npm start
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+The app runs at http://localhost:3000
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Project Structure
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```
+src/
+  App.tsx           # Main SPA and feature pages
+  App.css           # Styles
+  index.tsx         # Entrypoint
+  lib/
+    storage.ts      # LocalStorage load/save/export/import
+    utils.ts        # Utilities (currency, ids, dates)
+    dataConverter.ts# Old-backup → new DB converter
+  types/
+    models.ts       # App-wide TS interfaces
+  components/
+    ImageUpload.tsx
+    ItemImageDisplay.tsx
+```
 
-### `npm run eject`
+## Data Model (overview)
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+- InventoryItem: images, primaryImageId, costs (pre/post-shipping), min/max price, revenue, stock, metadata
+- Purchase: lines with unitCost and computed post-shipping costs; totals; paymentDate
+- Sale: lines with unitPrice; paymentMethod; optional installments; buyerName; totalAmount
+- Settings: weightCostPerLb
+- DB: { items, purchases, sales, settings }
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Business Rules
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+For the full, canonical set of business rules (pricing, inventory updates, allocations, grouping, etc.), see [BUSINESS_RULES.md](./BUSINESS_RULES.md).
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+## Import/Export
 
-## Learn More
+- Export: creates a JSON backup for download
+- Import: loads backup; if legacy format is detected, it is converted via `dataConverter`
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Configuration
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+- Weight cost per lb: `DEFAULT_SETTINGS.weightCostPerLb` in `src/types/models.ts`
+
+## Notes
+
+- Data is browser-local. Export regularly if you clear browser data.
+- Designed for small to medium catalogs; performance tuned for local use.
+
+## License
+
+MIT
