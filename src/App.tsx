@@ -154,27 +154,29 @@ function InventoryPage({ db, persist }: { db: DB; persist: (db: DB) => void }) {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="search-input"
+            data-testid="inventory-search"
           />
           {searchQuery && (
             <button
               className="search-clear"
               onClick={() => setSearchQuery('')}
               title="Clear search"
+              data-testid="search-clear"
             >
               ✕
             </button>
           )}
         </div>
         {searchQuery && (
-          <div className="search-results-info">
+          <div className="search-results-info" data-testid="search-results-info">
             {filteredItems.length} of {items.length} items found
           </div>
         )}
       </div>
 
-      <div className="cards two-cols">
+      <div className="cards two-cols" data-testid="inventory-cards">
         {filteredItems.map(it => (
-          <div key={it.id} className={`card item-card ${it.stock === 0 ? 'out-of-stock-card' : ''}`}>
+          <div key={it.id} className={`card item-card ${it.stock === 0 ? 'out-of-stock-card' : ''}`} data-testid="item-card" data-name={it.name}>
             <div className="card-row">
               <div className="card-title">{it.name}</div>
               <div className="muted">{new Date(it.createdAt).toLocaleDateString()}</div>
@@ -191,16 +193,34 @@ function InventoryPage({ db, persist }: { db: DB; persist: (db: DB) => void }) {
               </div>
               
               <div className="card-details-section">
-                <div className="grid two">
-                  <div><b>Category:</b> {it.category}</div>
-                  <div><b>Price Range:</b> {fmtUSD(it.minPrice ?? 0)} - {fmtUSD(it.maxPrice ?? 0)}</div>
-                  <div><b>Unit Cost:</b> {fmtUSD(it.costPostShipping ?? it.costPreShipping ?? 0)}</div>
-                  <div>
-                    <b>Stock:</b> {it.stock}
-                    {it.stock === 0 && <span className="out-of-stock-badge">out of stock</span>}
-                    {it.stock === 1 && <span className="last-item-badge">last item</span>}
+                {/* Category directly under the title to free space for Price Range */}
+                <div className="category-inline">
+                  <span className="label">Category:</span>
+                  <span className="value">{it.category}</span>
+                </div>
+
+                {/* Price range on its own full-width row */}
+                <div className="item-meta-row price-range-row">
+                  <span className="label">Price Range:</span>
+                  <span className="value">{fmtUSD(it.minPrice ?? 0)}{'\u00A0-\u00A0'}{fmtUSD(it.maxPrice ?? 0)}</span>
+                </div>
+
+                {/* Other meta in two columns */}
+                <div className="grid two meta-grid">
+                  <div className="item-meta-row">
+                    <span className="label">Unit Cost:</span>
+                    <span className="value">{fmtUSD(it.costPostShipping ?? it.costPreShipping ?? 0)}</span>
+                  </div>
+                  <div className="item-meta-row">
+                    <span className="label">Stock:</span>
+                    <span className="value">
+                      {it.stock}
+                      {it.stock === 0 && <span className="out-of-stock-badge">out of stock</span>}
+                      {it.stock === 1 && <span className="last-item-badge">last item</span>}
+                    </span>
                   </div>
                 </div>
+
                 {it.description && <div className="muted item-description">{it.description}</div>}
               </div>
             </div>
@@ -316,23 +336,23 @@ function InventoryForm({
       <div className="form grid two">
         <div>
           <label>Item Name</label>
-          <input value={name} onChange={e => setName(e.target.value)} />
+          <input value={name} onChange={e => setName(e.target.value)} data-testid="item-name-input" />
         </div>
         <div>
           <label>Category</label>
-          <select value={category} onChange={e => setCategory(e.target.value as Category)}>
+          <select value={category} onChange={e => setCategory(e.target.value as Category)} data-testid="item-category-select">
             {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
 
         <div className="col-span-2">
           <label>Description</label>
-          <input value={description} onChange={e => setDescription(e.target.value)} />
+          <input value={description} onChange={e => setDescription(e.target.value)} data-testid="item-description-input" />
         </div>
 
         <div>
           <label>Initial Count</label>
-          <input type="number" value={stock} onChange={e => setStock(parseNumber(e.target.value))} />
+          <input type="number" value={stock} onChange={e => setStock(parseNumber(e.target.value))} data-testid="item-stock-input" />
         </div>
         <div>
           <label>Total Cost (per unit, post-shipping)</label>
@@ -341,7 +361,8 @@ function InventoryForm({
             step="0.01" 
             inputMode="decimal" 
             value={costPostShipping} 
-            onChange={e => setCostPostShipping(parseNumber(e.target.value))} 
+            onChange={e => setCostPostShipping(parseNumber(e.target.value))}
+            data-testid="item-cost-post-shipping-input" 
           />
         </div>
         <div>
@@ -351,7 +372,8 @@ function InventoryForm({
             step="0.01" 
             inputMode="decimal" 
             value={costPreShipping} 
-            onChange={e => setCostPreShipping(parseNumber(e.target.value))} 
+            onChange={e => setCostPreShipping(parseNumber(e.target.value))}
+            data-testid="item-cost-pre-shipping-input" 
           />
         </div>
 
@@ -362,7 +384,8 @@ function InventoryForm({
             step="0.01" 
             inputMode="decimal" 
             value={minPrice ?? 0} 
-            onChange={e => setMinPrice(parseNumber(e.target.value))} 
+            onChange={e => setMinPrice(parseNumber(e.target.value))}
+            data-testid="item-min-price-input" 
           />
         </div>
         <div>
@@ -372,7 +395,8 @@ function InventoryForm({
             step="0.01" 
             inputMode="decimal" 
             value={maxPrice ?? 0} 
-            onChange={e => setMaxPrice(parseNumber(e.target.value))} 
+            onChange={e => setMaxPrice(parseNumber(e.target.value))}
+            data-testid="item-max-price-input" 
           />
         </div>
 
@@ -452,9 +476,9 @@ function PurchasesPage({ db, persist }: { db: DB; persist: (db: DB) => void }) {
         <button className="primary" onClick={() => { setEditing(null); setShowForm(true); }}>+ Register Purchase</button>
       </div>
 
-      <div className="cards">
+      <div className="cards" data-testid="purchase-cards">
         {db.purchases.map(p => (
-          <div key={p.id} className="card">
+          <div key={p.id} className="card" data-testid="purchase-card">
             <div className="card-row">
               <div className="card-title">Purchase #{p.id}</div>
               <div className="muted">{new Date(p.createdAt).toLocaleDateString()}</div>
@@ -511,6 +535,25 @@ function PurchasesPage({ db, persist }: { db: DB; persist: (db: DB) => void }) {
   );
 }
 
+// Helper function to check if purchase line quantities changed
+function hasQuantityChanges(oldLines: PurchaseLine[], newLines: PurchaseLine[]): boolean {
+  if (oldLines.length !== newLines.length) return true;
+  
+  for (let i = 0; i < oldLines.length; i++) {
+    const oldLine = oldLines[i];
+    const newLine = newLines.find(nl => nl.itemId === oldLine.itemId);
+    
+    if (!newLine) return true; // Item was removed/replaced
+    
+    const oldUnits = oldLine.quantity + (oldLine.hasSubItems ? (oldLine.subItemsQty ?? 0) : 0);
+    const newUnits = newLine.quantity + (newLine.hasSubItems ? (newLine.subItemsQty ?? 0) : 0);
+    
+    if (oldUnits !== newUnits) return true;
+  }
+  
+  return false;
+}
+
 function PurchaseForm({
   db,
   initial,
@@ -540,6 +583,11 @@ function PurchaseForm({
   const weightCost = db.settings?.weightCostPerLb ?? DEFAULT_SETTINGS.weightCostPerLb;
   const defaultIntl = weight * weightCost;
   const [shipIntl, setShipIntl] = useState<number>(initial?.shippingIntl ?? defaultIntl);
+  const [orderedDate, setOrderedDate] = useState<string>(() => {
+    const d = initial?.createdAt ?? nowIso();
+    // default to today; if editing and we later set orderedDate, it will be loaded below
+    return (initial as any)?.orderedDate ?? d.slice(0, 10);
+  });
   const [paymentDate, setPaymentDate] = useState<string>(() => {
     const d = initial?.createdAt ?? nowIso();
     // default to today; if editing and we later set paymentDate, it will be loaded below
@@ -609,6 +657,7 @@ function PurchaseForm({
     const p: Purchase = {
       id: initial?.id ?? uid(),
       createdAt: initial?.createdAt ?? nowIso(),
+      orderedDate,
       paymentDate,
       lines: enriched,
       subtotal,
@@ -621,31 +670,60 @@ function PurchaseForm({
     };
 
     let itemsUpdated = [...items];
-    enriched.forEach(l => {
-      const unitsLine = l.quantity + (l.hasSubItems ? (l.subItemsQty ?? 0) : 0);
-      itemsUpdated = itemsUpdated.map(it => {
-        if (it.id !== l.itemId) return it;
-        const nextStock = (it.stock ?? 0) + unitsLine;
-        const costPre = l.unitCost;
-        const costPost = l.unitCostPostShipping ?? l.unitCost;
-        const autoMin = (it.minPrice ?? (costPost + 5));
-        const avgComp = (it.competitorAPrice && it.competitorBPrice) ? (it.competitorAPrice + it.competitorBPrice) / 2 : it.maxPrice;
-        const nextMax = it.maxPrice ?? avgComp ?? (autoMin + 5);
-        const nextMinRev = (autoMin ?? 0) - costPost;
-        const nextMaxRev = (nextMax ?? 0) - costPost;
-        return {
-          ...it,
-          stock: nextStock,
-          costPreShipping: costPre,
-          costPostShipping: costPost,
-          minPrice: autoMin,
-          maxPrice: nextMax,
-          minRevenue: nextMinRev,
-          maxRevenue: nextMaxRev,
-          updatedAt: nowIso(),
-        };
+    
+    // Only update inventory items if this is a new purchase OR if item quantities actually changed
+    const shouldUpdateInventory = !initial || hasQuantityChanges(initial.lines, enriched);
+    
+    if (shouldUpdateInventory) {
+      enriched.forEach(l => {
+        const unitsLine = l.quantity + (l.hasSubItems ? (l.subItemsQty ?? 0) : 0);
+        itemsUpdated = itemsUpdated.map(it => {
+          if (it.id !== l.itemId) return it;
+          const nextStock = (it.stock ?? 0) + unitsLine;
+          const costPre = l.unitCost;
+          const costPost = l.unitCostPostShipping ?? l.unitCost;
+          const autoMin = (it.minPrice ?? (costPost + 5));
+          const avgComp = (it.competitorAPrice && it.competitorBPrice) ? (it.competitorAPrice + it.competitorBPrice) / 2 : it.maxPrice;
+          const nextMax = it.maxPrice ?? avgComp ?? (autoMin + 5);
+          const nextMinRev = (autoMin ?? 0) - costPost;
+          const nextMaxRev = (nextMax ?? 0) - costPost;
+          return {
+            ...it,
+            stock: nextStock,
+            costPreShipping: costPre,
+            costPostShipping: costPost,
+            minPrice: autoMin,
+            maxPrice: nextMax,
+            minRevenue: nextMinRev,
+            maxRevenue: nextMaxRev,
+            updatedAt: nowIso(),
+          };
+        });
       });
-    });
+    } else {
+      // For shipping/tax-only edits, just update cost calculations without changing stock
+      enriched.forEach(l => {
+        itemsUpdated = itemsUpdated.map(it => {
+          if (it.id !== l.itemId) return it;
+          const costPre = l.unitCost;
+          const costPost = l.unitCostPostShipping ?? l.unitCost;
+          const autoMin = (costPost + 5);
+          const autoMax = (costPost + 10);
+          const nextMinRev = autoMin - costPost;
+          const nextMaxRev = autoMax - costPost;
+          return {
+            ...it,
+            costPreShipping: costPre,
+            costPostShipping: costPost,
+            minPrice: Math.round(autoMin * 2) / 2, // Round to nearest 0.5
+            maxPrice: Math.round(autoMax * 2) / 2, // Round to nearest 0.5
+            minRevenue: nextMinRev,
+            maxRevenue: nextMaxRev,
+            updatedAt: nowIso(),
+          };
+        });
+      });
+    }
 
     onSave(p, itemsUpdated);
   }
@@ -655,7 +733,7 @@ function PurchaseForm({
       <div className="section-title">Purchase Items</div>
 
       {lines.map((l, idx) => (
-        <div key={l.id} className="grid-with-delete">
+        <div key={l.id} className="grid-with-delete" data-testid={`purchase-line-${idx}`}>
           <div className="grid four row-gap">
             <div>
               <label>Select Item</label>
@@ -671,6 +749,7 @@ function PurchaseForm({
                       setLines(lines.map(x => x.id === l.id ? { ...x, itemId: v } : x));
                     }
                   }}
+                  data-testid="item-select"
                 >
                   <option value="" disabled>Select Item</option>
                   <option value="ADD_NEW" style={{ fontWeight: 'bold', borderTop: '1px solid #ccc' }}>+ Add New Item</option>
@@ -684,6 +763,7 @@ function PurchaseForm({
                 type="number"
                 value={l.quantity}
                 onChange={e => setLines(lines.map(x => x.id === l.id ? { ...x, quantity: parseNumber(e.target.value) } : x))}
+                data-testid="quantity-input"
               />
             </div>
             <div>
@@ -699,6 +779,7 @@ function PurchaseForm({
                   setLines(next);
                   setSubtotal(calcSubtotal(next));
                 }}
+                data-testid="unit-cost-input"
               />
             </div>
             <div className="checkbox">
@@ -707,6 +788,7 @@ function PurchaseForm({
                   type="checkbox"
                   checked={l.hasSubItems}
                   onChange={e => setLines(lines.map(x => x.id === l.id ? { ...x, hasSubItems: e.target.checked } : x))}
+                  data-testid="sub-items-checkbox"
                 />
                 Sub-items
               </label>
@@ -715,13 +797,14 @@ function PurchaseForm({
                   placeholder="Sub-items qty"
                   value={l.subItemsQty ?? 0}
                   onChange={e => setLines(lines.map(x => x.id === l.id ? { ...x, subItemsQty: parseNumber(e.target.value) } : x))}
+                  data-testid="sub-items-quantity-input"
                 />
               )}
             </div>
 
             {idx === lines.length - 1 && (
               <div className="col-span-4">
-                <button className="link" onClick={addLine}>+ Add Another Item</button>
+                <button className="link" onClick={addLine} data-testid="add-purchase-line-btn">+ Add Another Item</button>
               </div>
             )}
           </div>
@@ -731,6 +814,7 @@ function PurchaseForm({
               className="delete-line-btn" 
               onClick={() => deleteLine(l.id)}
               title="Remove item"
+              data-testid="delete-line-btn"
             >
               ✕
             </button>
@@ -740,11 +824,21 @@ function PurchaseForm({
 
       <div className="grid four row-gap">
         <div>
+          <label>Ordered Date</label>
+          <input
+            type="date"
+            value={orderedDate}
+            onChange={e => setOrderedDate(e.target.value)}
+            data-testid="ordered-date-input"
+          />
+        </div>
+        <div>
           <label>Payment Date</label>
           <input
             type="date"
             value={paymentDate}
             onChange={e => setPaymentDate(e.target.value)}
+            data-testid="payment-date-input"
           />
         </div>
         <div>
@@ -754,7 +848,8 @@ function PurchaseForm({
             step="0.01" 
             inputMode="decimal" 
             value={subtotal} 
-            onChange={e => setSubtotal(parseNumber(e.target.value))} 
+            onChange={e => setSubtotal(parseNumber(e.target.value))}
+            data-testid="subtotal-input"
           />
         </div>
         <div>
@@ -764,7 +859,8 @@ function PurchaseForm({
             step="0.01" 
             inputMode="decimal" 
             value={tax} 
-            onChange={e => setTax(parseNumber(e.target.value))} 
+            onChange={e => setTax(parseNumber(e.target.value))}
+            data-testid="tax-input"
           />
         </div>
         <div>
@@ -774,7 +870,8 @@ function PurchaseForm({
             step="0.01" 
             inputMode="decimal" 
             value={shipUS} 
-            onChange={e => setShipUS(parseNumber(e.target.value))} 
+            onChange={e => setShipUS(parseNumber(e.target.value))}
+            data-testid="shipping-us-input"
           />
         </div>
         <div>
@@ -788,7 +885,8 @@ function PurchaseForm({
               const v = parseNumber(e.target.value);
               setWeight(v);
               setShipIntl(v * (db.settings?.weightCostPerLb ?? DEFAULT_SETTINGS.weightCostPerLb));
-            }} 
+            }}
+            data-testid="weight-input"
           />
         </div>
         <div>
@@ -798,7 +896,8 @@ function PurchaseForm({
             step="0.01" 
             inputMode="decimal" 
             value={shipIntl} 
-            onChange={e => setShipIntl(parseNumber(e.target.value))} 
+            onChange={e => setShipIntl(parseNumber(e.target.value))}
+            data-testid="shipping-intl-input"
           />
           <div className="muted tiny">Auto: weight × weight cost ({fmtUSD(db.settings?.weightCostPerLb ?? DEFAULT_SETTINGS.weightCostPerLb)}/lb)</div>
         </div>
@@ -809,12 +908,12 @@ function PurchaseForm({
       </div>
 
       <div className="row gap end">
-        <button className="primary" onClick={save}>{initial ? 'Save Changes' : 'Register Purchase'}</button>
+        <button className="primary" onClick={save} data-testid={initial ? "update-purchase-btn" : "register-purchase-btn"}>{initial ? 'Save Changes' : 'Register Purchase'}</button>
         <button onClick={onClose}>Cancel</button>
       </div>
 
       {showAddItem && (
-        <div className="modal-overlay">
+        <div className="modal-overlay" data-testid="quick-add-overlay">
           <QuickAddItemForm
             onSave={onAddItem}
             onCancel={() => {
@@ -876,11 +975,12 @@ function QuickAddItemForm({
             onChange={e => setName(e.target.value)}
             placeholder="Enter item name"
             autoFocus
+            data-testid="quick-add-name-input"
           />
         </div>
         <div>
           <label>Category</label>
-          <select value={category} onChange={e => setCategory(e.target.value as Category)}>
+          <select value={category} onChange={e => setCategory(e.target.value as Category)} data-testid="quick-add-category-select">
             {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
@@ -895,7 +995,7 @@ function QuickAddItemForm({
       </div>
 
       <div className="form-footer row gap end">
-        <button className="primary" onClick={save}>Add Item</button>
+        <button className="primary" onClick={save} data-testid="quick-add-add-btn">Add Item</button>
         <button onClick={onCancel}>Cancel</button>
       </div>
     </div>
@@ -1328,6 +1428,15 @@ function AnalyticsPage({ db }: { db: DB }) {
   const totalSalesOverall = db.sales.reduce((acc, s) => acc + s.totalAmount, 0);
   const totalSalesThisMonth = db.sales.filter(s => isSameMonth(s.createdAt)).reduce((acc, s) => acc + s.totalAmount, 0);
 
+  // Payment method summaries
+  const salesByMethod = db.sales.reduce((acc, s) => {
+    const key = s.paymentMethod;
+    if (!acc[key]) acc[key] = { count: 0, amount: 0 } as { count: number; amount: number };
+    acc[key].count += 1;
+    acc[key].amount += s.totalAmount;
+    return acc;
+  }, {} as Record<'cash' | 'transfer' | 'installments', { count: number; amount: number }>);
+
   const totalInvWithShipping = db.items.reduce((acc, it) => acc + (it.costPostShipping ?? it.costPreShipping ?? 0) * it.stock, 0);
   const totalInvWithoutShipping = db.items.reduce((acc, it) => acc + (it.costPreShipping ?? 0) * it.stock, 0);
 
@@ -1335,8 +1444,8 @@ function AnalyticsPage({ db }: { db: DB }) {
     <div className="page">
       <h2>Analytics</h2>
 
-      <div className="cards">
-        <div className="card analytics-item-card">
+      <div className="cards two-cols">
+        <div className="card analytics-item-card" data-testid="most-popular-card">
           <div className="card-title">Most Popular Item</div>
           {mostPopularItem ? (
             <div className="analytics-item-content">
@@ -1360,7 +1469,7 @@ function AnalyticsPage({ db }: { db: DB }) {
           )}
         </div>
 
-        <div className="card analytics-item-card">
+        <div className="card analytics-item-card" data-testid="most-expensive-card">
           <div className="card-title">Most Expensive Item</div>
           {mostExpensive ? (
             <div className="analytics-item-content">
@@ -1384,7 +1493,7 @@ function AnalyticsPage({ db }: { db: DB }) {
           )}
         </div>
 
-        <div className="card analytics-item-card">
+        <div className="card analytics-item-card" data-testid="least-expensive-card">
           <div className="card-title">Less Expensive Item</div>
           {leastExpensive ? (
             <div className="analytics-item-content">
@@ -1408,12 +1517,12 @@ function AnalyticsPage({ db }: { db: DB }) {
           )}
         </div>
 
-        <div className="card">
+        <div className="card" data-testid="total-sales-month-card">
           <div className="card-title">Total Sales (This Month)</div>
           <div className="green">{fmtUSD(totalSalesThisMonth)}</div>
         </div>
 
-        <div className="card">
+        <div className="card" data-testid="total-sales-overall-card">
           <div className="card-title">Total Sales (Overall)</div>
           <div className="green">{fmtUSD(totalSalesOverall)}</div>
         </div>
@@ -1427,6 +1536,37 @@ function AnalyticsPage({ db }: { db: DB }) {
           <div className="card-title">Total Inventory Value (without shipping)</div>
           <div className="blue">{fmtUSD(totalInvWithoutShipping)}</div>
         </div>
+
+        {/* Sales by payment method (only show when count > 0) */}
+        {salesByMethod.cash?.count > 0 && (
+          <div className="card subcard" data-testid="sales-by-cash-card">
+            <div className="card-title">Sales by Cash</div>
+            <div className="grid two">
+              <div><b>Count:</b> {salesByMethod.cash.count}</div>
+              <div><b>Amount:</b> {fmtUSD(salesByMethod.cash.amount)}</div>
+            </div>
+          </div>
+        )}
+
+        {salesByMethod.transfer?.count > 0 && (
+          <div className="card subcard" data-testid="sales-by-transfer-card">
+            <div className="card-title">Sales by Card/Transfer</div>
+            <div className="grid two">
+              <div><b>Count:</b> {salesByMethod.transfer.count}</div>
+              <div><b>Amount:</b> {fmtUSD(salesByMethod.transfer.amount)}</div>
+            </div>
+          </div>
+        )}
+
+        {salesByMethod.installments?.count > 0 && (
+          <div className="card subcard" data-testid="sales-by-installments-card">
+            <div className="card-title">Sales by Installments</div>
+            <div className="grid two">
+              <div><b>Count:</b> {salesByMethod.installments.count}</div>
+              <div><b>Amount:</b> {fmtUSD(salesByMethod.installments.amount)}</div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

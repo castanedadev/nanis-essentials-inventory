@@ -126,6 +126,8 @@ export function convertOldBackupToNew(oldData: OldBackup): DB {
     return {
       id: oldPurchase.id,
       createdAt: oldPurchase.date,
+      orderedDate: oldPurchase.date, // Use same date for both ordered and payment
+      paymentDate: oldPurchase.date,
       lines,
       subtotal: oldPurchase.subtotal,
       tax: oldPurchase.tax,

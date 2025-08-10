@@ -59,6 +59,7 @@ export interface PurchaseLine {
 export interface Purchase {
   id: string;
   createdAt: string; // ISO
+  orderedDate?: string; // ISO - when the order was placed
   paymentDate?: string; // ISO - when this purchase is/will be paid
   lines: PurchaseLine[];
   // Footer fields
