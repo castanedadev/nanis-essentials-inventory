@@ -35,6 +35,8 @@ button.icon { border: none; background: transparent; font-size: 18px; }
 .cards { display: grid; gap: 12px; }
 .cards.two-cols { grid-template-columns: repeat(2, 1fr); }
 .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
+.subcard { background: #fbfbfd; border: 1px dashed var(--border); border-radius: 12px; padding: 12px; }
+.subcard .card-title { font-weight: 600; font-size: 14px; margin-bottom: 6px; }
 .card-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 .card-title { font-weight: 700; }
 .card .row.gap { margin-top: 16px; padding-top: 12px; border-top: 1px solid #f3f4f6; }
@@ -502,6 +504,61 @@ input, select { width: 100%; padding: 10px 12px; border: 1px solid var(--border)
   flex: 1;
   min-width: 0;
 }
+
+/* Inline meta rows for inventory cards */
+.item-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* label left, value right */
+  gap: 8px;
+  line-height: 1.3;
+  padding: 4px 0;
+}
+.item-meta-row .label {
+  color: var(--muted);
+  font-weight: 600;
+}
+.item-meta-row .value {
+  font-weight: 700;
+  white-space: nowrap; /* keep single line */
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.price-range-row .value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 65%;
+}
+
+/* Make meta grid align like two columns with equal spacing */
+.meta-grid {
+  grid-template-columns: 1fr 1fr;
+}
+
+/* Improve badges spacing inside stock value */
+.item-meta-row .value .last-item-badge,
+.item-meta-row .value .out-of-stock-badge {
+  margin-left: 8px;
+}
+
+/* Reduce emphasis of label so it doesn't look like a heading */
+.item-meta-row .label {
+  font-size: 13px;
+}
+.item-meta-row .value {
+  font-size: 14px;
+}
+
+/* Category right below title */
+.category-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.category-inline .label { color: var(--muted); font-size: 13px; font-weight: 600; }
+.category-inline .value { font-weight: 700; }
 
 .item-description {
   margin-top: 12px;
