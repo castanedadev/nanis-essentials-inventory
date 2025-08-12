@@ -21,6 +21,7 @@ A local-first SPA to manage cosmetics inventory, purchases, and sales with light
 ## Getting Started
 
 Prerequisites:
+
 - Node.js 18+ (or latest LTS)
 
 Install and run:
@@ -66,6 +67,17 @@ For the full, canonical set of business rules (pricing, inventory updates, alloc
 
 - Export: creates a JSON backup for download
 - Import: loads backup; if legacy format is detected, it is converted via `dataConverter`
+
+## Code Quality
+
+This project enforces code quality through:
+
+- **ESLint**: TypeScript/React linting with strict rules
+- **Prettier**: Consistent code formatting
+- **Pre-commit hooks**: Automatic linting/formatting before commits
+- **Type checking**: Full TypeScript validation
+
+See [CODE_QUALITY.md](CODE_QUALITY.md) for detailed setup and usage.
 
 ## Configuration
 

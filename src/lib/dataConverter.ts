@@ -60,18 +60,25 @@ interface OldBackup {
   encrypted?: boolean;
 }
 
-const VALID_CATEGORIES: Category[] = ['Hair Care', 'Body Care', 'Makeup', 'Fragrance', 'Skin Care', 'Other'];
+const _VALID_CATEGORIES: Category[] = [
+  'Hair Care',
+  'Body Care',
+  'Makeup',
+  'Fragrance',
+  'Skin Care',
+  'Other',
+];
 
 function mapCategory(oldCategory: string): Category {
   // Try to match the old category to a valid one
   const normalized = oldCategory.toLowerCase();
-  
+
   if (normalized.includes('body') || normalized.includes('care')) return 'Body Care';
   if (normalized.includes('hair')) return 'Hair Care';
   if (normalized.includes('makeup') || normalized.includes('cosmetic')) return 'Makeup';
   if (normalized.includes('fragrance') || normalized.includes('perfume')) return 'Fragrance';
   if (normalized.includes('skin')) return 'Skin Care';
-  
+
   return 'Other';
 }
 
@@ -79,7 +86,7 @@ export function convertOldBackupToNew(oldData: OldBackup): DB {
   // Convert items
   const items: InventoryItem[] = oldData.items.map(oldItem => {
     const costPerUnit = oldItem.count > 0 ? oldItem.totalCost / oldItem.count : 0;
-    
+
     return {
       id: oldItem.id,
       name: oldItem.name,
@@ -90,8 +97,8 @@ export function convertOldBackupToNew(oldData: OldBackup): DB {
       primaryImageId: undefined,
       costPreShipping: costPerUnit,
       costPostShipping: costPerUnit, // Assume same for old data
-      minPrice: oldItem.minPrice || (costPerUnit + 5),
-      maxPrice: oldItem.maxPrice || (costPerUnit + 10),
+      minPrice: oldItem.minPrice || costPerUnit + 5,
+      maxPrice: oldItem.maxPrice || costPerUnit + 10,
       competitorAPrice: oldItem.competitorAPrice,
       competitorBPrice: oldItem.competitorBPrice,
       minRevenue: oldItem.minRevenue || 0,
@@ -119,8 +126,9 @@ export function convertOldBackupToNew(oldData: OldBackup): DB {
         unitCostPostShipping: item.unitCost,
       }));
 
-    const totalUnits = lines.reduce((acc, l) => 
-      acc + l.quantity + (l.hasSubItems ? (l.subItemsQty ?? 0) : 0), 0
+    const totalUnits = lines.reduce(
+      (acc, l) => acc + l.quantity + (l.hasSubItems ? (l.subItemsQty ?? 0) : 0),
+      0
     );
 
     return {
