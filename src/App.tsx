@@ -16,6 +16,7 @@ import {
 } from './types/models';
 import { ImageUpload } from './components/ImageUpload';
 import { ItemCardImage } from './components/ItemImageDisplay';
+import { InventoryFilters, InventorySortOption } from './components/InventoryFilters';
 
 type Tab = 'inventory' | 'purchases' | 'sales' | 'analytics';
 
@@ -161,6 +162,7 @@ function InventoryPage({
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<InventoryItem | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<InventorySortOption>('inStock');
 
   const items = db.items;
 
@@ -175,6 +177,38 @@ function InventoryPage({
         (item.description && item.description.toLowerCase().includes(query))
     );
   }, [items, searchQuery]);
+
+  const sortedItems = useMemo(() => {
+    const copy = [...filteredItems];
+    switch (sortBy) {
+      case 'nameAsc':
+        return copy.sort((a, b) => a.name.localeCompare(b.name));
+      case 'nameDesc':
+        return copy.sort((a, b) => b.name.localeCompare(a.name));
+      case 'minPriceAsc':
+        return copy.sort((a, b) => {
+          const aVal = a.minPrice ?? Number.POSITIVE_INFINITY;
+          const bVal = b.minPrice ?? Number.POSITIVE_INFINITY;
+          return aVal - bVal;
+        });
+      case 'minPriceDesc':
+        return copy.sort((a, b) => {
+          const aVal = a.minPrice ?? Number.NEGATIVE_INFINITY;
+          const bVal = b.minPrice ?? Number.NEGATIVE_INFINITY;
+          return bVal - aVal;
+        });
+      case 'inStock':
+      default:
+        return copy.sort((a, b) => {
+          const aStock = a.stock ?? 0;
+          const bStock = b.stock ?? 0;
+          // Sort by stock level (high to low), which naturally puts out-of-stock (0) at bottom
+          if (aStock !== bStock) return bStock - aStock;
+          // Tie-breaker by name for stable, predictable order
+          return a.name.localeCompare(b.name);
+        });
+    }
+  }, [filteredItems, sortBy]);
 
   const onDelete = (id: string) => {
     if (!window.confirm('Delete item?')) return;
@@ -227,36 +261,17 @@ function InventoryPage({
         </div>
       </div>
 
-      <div className="search-section">
-        <div className="search-input-container">
-          <input
-            type="text"
-            placeholder="Search items by name or description..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="search-input"
-            data-testid="inventory-search"
-          />
-          {searchQuery && (
-            <button
-              className="search-clear"
-              onClick={() => setSearchQuery('')}
-              title="Clear search"
-              data-testid="search-clear"
-            >
-              ✕
-            </button>
-          )}
-        </div>
-        {searchQuery && (
-          <div className="search-results-info" data-testid="search-results-info">
-            {filteredItems.length} of {items.length} items found
-          </div>
-        )}
-      </div>
+      <InventoryFilters
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+        totalCount={items.length}
+        filteredCount={filteredItems.length}
+      />
 
       <div className="cards two-cols" data-testid="inventory-cards">
-        {filteredItems.map(it => (
+        {sortedItems.map(it => (
           <div
             key={it.id}
             className={`card item-card ${it.stock === 0 ? 'out-of-stock-card' : ''}`}
