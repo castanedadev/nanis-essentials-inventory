@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffd1e5"/>
+      <stop offset="100%" stop-color="#ff70a6"/>
+    </linearGradient>
+    <filter id="s" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-color="rgba(0,0,0,0.25)"/>
+    </filter>
+  </defs>
+  <rect x="4" y="4" width="56" height="56" rx="12" fill="url(#g)"/>
+  <!-- Monogram shape echoing brand mark style -->
+  <g filter="url(#s)">
+    <rect x="14" y="14" width="36" height="36" rx="8" fill="#ffffff"/>
+  </g>
+  <!-- Heart-like accent to match beauty theme -->
+  <path d="M36 24c-2 0-3.2 1.4-4 2.6C31.2 25.4 30 24 28 24c-2.5 0-4 2-4 4 0 5 8 9 8 9s8-4 8-9c0-2-1.5-4-4-4z" fill="#ec2a7b"/>
+</svg>
+
