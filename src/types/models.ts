@@ -1,21 +1,15 @@
-export type Category =
-  | 'Hair Care'
-  | 'Body Care'
-  | 'Makeup'
-  | 'Fragrance'
-  | 'Skin Care'
-  | 'Other';
+export type Category = 'Hair Care' | 'Body Care' | 'Makeup' | 'Fragrance' | 'Skin Care' | 'Other';
 
 export type PaymentMethod = 'cash' | 'transfer' | 'installments';
 
 export interface ItemImage {
   id: string;
-  name: string;                  // Original filename
-  dataUrl: string;               // Base64 encoded image data
-  size: number;                  // File size in bytes  
-  type: string;                  // MIME type (image/jpeg, image/png)
-  uploadedAt: string;            // ISO timestamp
-  isPrimary?: boolean;           // Primary image flag
+  name: string; // Original filename
+  dataUrl: string; // Base64 encoded image data
+  size: number; // File size in bytes
+  type: string; // MIME type (image/jpeg, image/png)
+  uploadedAt: string; // ISO timestamp
+  isPrimary?: boolean; // Primary image flag
 }
 
 export interface InventoryItem {
@@ -26,11 +20,11 @@ export interface InventoryItem {
   category: Category;
   stock: number;
   // Image support
-  images: ItemImage[];           // Array of product images
-  primaryImageId?: string;       // Main display image
+  images: ItemImage[]; // Array of product images
+  primaryImageId?: string; // Main display image
   // Costs are per unit
-  costPreShipping?: number;   // base unit cost, before any tax/shipping allocations
-  costPostShipping?: number;  // cost after all allocations
+  costPreShipping?: number; // base unit cost, before any tax/shipping allocations
+  costPostShipping?: number; // cost after all allocations
   // Pricing
   minPrice?: number;
   maxPrice?: number;
@@ -45,10 +39,10 @@ export interface InventoryItem {
 export interface PurchaseLine {
   id: string;
   itemId: string;
-  quantity: number;           // number of parent units
-  unitCost: number;           // base cost per parent unit (pre-shipping/tax)
+  quantity: number; // number of parent units
+  unitCost: number; // base cost per parent unit (pre-shipping/tax)
   hasSubItems: boolean;
-  subItemsQty?: number;       // only if hasSubItems === true
+  subItemsQty?: number; // only if hasSubItems === true
   // Derived per-unit allocations (post-save)
   perUnitTax?: number;
   perUnitShippingUS?: number;
@@ -70,7 +64,7 @@ export interface Purchase {
   weightLbs: number;
   // Derived
   totalUnits: number; // includes sub-items
-  totalCost: number;  // subtotal + tax + shippingUS + shippingIntl
+  totalCost: number; // subtotal + tax + shippingUS + shippingIntl
 }
 
 export interface SaleLine {

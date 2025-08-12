@@ -4,9 +4,9 @@ import { processImageFile, IMAGE_CONFIG } from '../lib/imageUtils';
 
 interface ImageUploadProps {
   images: ItemImage[];
-  onImagesChange: (images: ItemImage[]) => void;
+  onImagesChange: (_images: ItemImage[]) => void;
   primaryImageId?: string;
-  onPrimaryImageChange: (imageId: string) => void;
+  onPrimaryImageChange: (_imageId: string) => void;
   maxImages?: number;
 }
 
@@ -24,7 +24,7 @@ export function ImageUpload({
   const handleFiles = async (files: FileList) => {
     const remainingSlots = maxImages - images.length;
     const filesToProcess = Array.from(files).slice(0, remainingSlots);
-    
+
     if (filesToProcess.length === 0) {
       alert(`Maximum ${maxImages} images allowed`);
       return;
@@ -45,7 +45,7 @@ export function ImageUpload({
     if (newImages.length > 0) {
       const updatedImages = [...images, ...newImages];
       onImagesChange(updatedImages);
-      
+
       // Set first uploaded image as primary if no primary exists
       if (!primaryImageId && newImages.length > 0) {
         onPrimaryImageChange(newImages[0].id);
@@ -69,7 +69,7 @@ export function ImageUpload({
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       handleFiles(e.dataTransfer.files);
     }
@@ -84,7 +84,7 @@ export function ImageUpload({
   const removeImage = (imageId: string) => {
     const updatedImages = images.filter(img => img.id !== imageId);
     onImagesChange(updatedImages);
-    
+
     // If removing primary image, set new primary
     if (primaryImageId === imageId && updatedImages.length > 0) {
       onPrimaryImageChange(updatedImages[0].id);
@@ -98,7 +98,7 @@ export function ImageUpload({
   return (
     <div className="image-upload-container">
       <label>Product Images</label>
-      
+
       {/* Upload Area */}
       <div
         className={`image-dropzone ${dragActive ? 'drag-active' : ''} ${uploading ? 'uploading' : ''}`}
@@ -116,7 +116,7 @@ export function ImageUpload({
           onChange={handleFileInput}
           style={{ display: 'none' }}
         />
-        
+
         {uploading ? (
           <div className="upload-spinner">
             <div className="spinner"></div>
@@ -125,9 +125,12 @@ export function ImageUpload({
         ) : (
           <div className="upload-prompt">
             <div className="upload-icon">📸</div>
-            <p><strong>Click or drag images here</strong></p>
+            <p>
+              <strong>Click or drag images here</strong>
+            </p>
             <p className="upload-hint">
-              JPEG, PNG, WebP • Max {IMAGE_CONFIG.maxFileSize / (1024 * 1024)}MB each • Up to {maxImages} images
+              JPEG, PNG, WebP • Max {IMAGE_CONFIG.maxFileSize / (1024 * 1024)}MB each • Up to{' '}
+              {maxImages} images
             </p>
           </div>
         )}
@@ -136,10 +139,13 @@ export function ImageUpload({
       {/* Image Preview Grid */}
       {images.length > 0 && (
         <div className="image-preview-grid">
-          {images.map((image) => (
-            <div key={image.id} className={`image-preview ${primaryImageId === image.id ? 'primary' : ''}`}>
+          {images.map(image => (
+            <div
+              key={image.id}
+              className={`image-preview ${primaryImageId === image.id ? 'primary' : ''}`}
+            >
               <img src={image.dataUrl} alt={image.name} />
-              
+
               <div className="image-overlay">
                 <button
                   type="button"
@@ -149,7 +155,7 @@ export function ImageUpload({
                 >
                   {primaryImageId === image.id ? '⭐' : '☆'}
                 </button>
-                
+
                 <button
                   type="button"
                   className="remove-btn"
@@ -159,7 +165,7 @@ export function ImageUpload({
                   ✕
                 </button>
               </div>
-              
+
               <div className="image-info">
                 <div className="image-name">{image.name}</div>
                 {primaryImageId === image.id && <div className="primary-badge">Primary</div>}
@@ -168,7 +174,7 @@ export function ImageUpload({
           ))}
         </div>
       )}
-      
+
       {images.length > 0 && (
         <div className="upload-stats">
           {images.length} / {maxImages} images

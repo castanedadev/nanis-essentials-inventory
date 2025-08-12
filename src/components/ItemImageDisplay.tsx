@@ -1,6 +1,6 @@
 import React from 'react';
 import { ItemImage } from '../types/models';
-import { getPrimaryImage, getCategoryPlaceholder, generateEmojiPlaceholder } from '../lib/imageUtils';
+import { getPrimaryImage, getCategoryPlaceholder } from '../lib/imageUtils';
 
 interface ItemImageDisplayProps {
   images: ItemImage[];
@@ -22,7 +22,7 @@ export function ItemImageDisplay({
   onClick,
 }: ItemImageDisplayProps) {
   const primaryImage = getPrimaryImage(images, primaryImageId);
-  
+
   const sizeClasses = {
     small: 'w-16 h-16',
     medium: 'w-24 h-24',
@@ -44,7 +44,7 @@ export function ItemImageDisplay({
 
   // Show category placeholder if no images
   const placeholder = getCategoryPlaceholder(category);
-  
+
   return (
     <div
       className={`item-image-placeholder ${sizeClasses[size]} ${className}`}
