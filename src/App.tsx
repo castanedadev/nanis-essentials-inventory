@@ -369,7 +369,10 @@ function InventoryForm({
   const maxRevenue = (maxPrice ?? 0) - (costPostShipping || costPreShipping || 0);
 
   const save = () => {
-    if (!name.trim()) return alert('Name is required');
+    if (!name.trim()) {
+      alert('Name is required');
+      return;
+    }
     const item: InventoryItem = {
       id: initial?.id ?? uid(),
       name: name.trim(),
@@ -765,8 +768,14 @@ function PurchaseForm({
   }
 
   function save() {
-    if (!lines.length) return alert('Add at least one item');
-    if (!lines.every(l => l.itemId)) return alert('Select item for all lines');
+    if (!lines.length) {
+      alert('Add at least one item');
+      return;
+    }
+    if (!lines.every(l => l.itemId)) {
+      alert('Select item for all lines');
+      return;
+    }
 
     const units = totalUnits();
     const perUnitTax = units ? tax / units : 0;
@@ -1107,7 +1116,10 @@ function QuickAddItemForm({
   const [description, setDescription] = useState('');
 
   const save = () => {
-    if (!name.trim()) return window.alert('Item name is required');
+    if (!name.trim()) {
+      window.alert('Item name is required');
+      return;
+    }
 
     const item: InventoryItem = {
       id: uid(),
@@ -1487,8 +1499,14 @@ function SaleForm({
     paymentMethod === 'installments' && numberOfPayments > 0 ? total / numberOfPayments : 0;
 
   function save() {
-    if (!lines.length) return alert('Add at least one item');
-    if (!lines.every(l => l.itemId)) return alert('Select item for all lines');
+    if (!lines.length) {
+      alert('Add at least one item');
+      return;
+    }
+    if (!lines.every(l => l.itemId)) {
+      alert('Select item for all lines');
+      return;
+    }
 
     const s: Sale = {
       id: initial?.id ?? uid(),
