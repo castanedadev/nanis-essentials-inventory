@@ -82,7 +82,9 @@ export default function App() {
         onClear={onClear}
       />
 
-      {tab === 'inventory' && <InventoryPage db={db} persist={persist} />}
+      {tab === 'inventory' && (
+        <InventoryPage db={db} persist={persist} onRefresh={() => setDb(loadDB())} />
+      )}
       {tab === 'purchases' && <PurchasesPage db={db} persist={persist} />}
       {tab === 'sales' && <SalesPage db={db} persist={persist} />}
       {tab === 'analytics' && <AnalyticsPage db={db} />}
@@ -105,7 +107,9 @@ function TopBar({
 }) {
   return (
     <div className="topbar">
-      <div className="title">Nani's Essentials</div>
+      <div className="brand">
+        <div className="title">Nani's Essentials</div>
+      </div>
       <div className="tabs">
         <button
           className={active === 'inventory' ? 'tab active' : 'tab'}
@@ -145,7 +149,15 @@ function TopBar({
 
 /* ========== Inventory ========== */
 
-function InventoryPage({ db, persist }: { db: DB; persist: (_db: DB) => void }) {
+function InventoryPage({
+  db,
+  persist,
+  onRefresh,
+}: {
+  db: DB;
+  persist: (_db: DB) => void;
+  onRefresh: () => void;
+}) {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<InventoryItem | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -173,15 +185,46 @@ function InventoryPage({ db, persist }: { db: DB; persist: (_db: DB) => void }) 
     <div className="page">
       <div className="page-header">
         <h2>Inventory Management</h2>
-        <button
-          className="primary"
-          onClick={() => {
-            setEditing(null);
-            setShowForm(true);
-          }}
-        >
-          + Add Item
-        </button>
+        <div className="row gap">
+          <button
+            onClick={onRefresh}
+            title="Refresh inventory data"
+            data-testid="refresh-inventory-btn"
+          >
+            🔄 Refresh
+          </button>
+          <button
+            onClick={() => {
+              const updatedItems = db.items.map(item => {
+                if (!item.costPostShipping) return item;
+                const autoMin = Math.ceil(item.costPostShipping + 5);
+                const autoMax = Math.ceil(item.costPostShipping + 10);
+                return {
+                  ...item,
+                  minPrice: autoMin,
+                  maxPrice: autoMax,
+                  minRevenue: autoMin - item.costPostShipping,
+                  maxRevenue: autoMax - item.costPostShipping,
+                  updatedAt: nowIso(),
+                };
+              });
+              persist({ ...db, items: updatedItems });
+            }}
+            title="Recalculate all item prices using current pricing logic"
+            data-testid="recalculate-prices-btn"
+          >
+            💰 Recalculate Prices
+          </button>
+          <button
+            className="primary"
+            onClick={() => {
+              setEditing(null);
+              setShowForm(true);
+            }}
+          >
+            + Add Item
+          </button>
+        </div>
       </div>
 
       <div className="search-section">
@@ -338,22 +381,12 @@ function InventoryForm({
 
   const autoMin = useMemo(() => {
     const raw = (costPostShipping || 0) + 5;
-    const decimal = raw % 1;
-    if (decimal < 0.5) {
-      return Math.floor(raw);
-    } else {
-      return Math.ceil(raw);
-    }
+    return Math.ceil(raw);
   }, [costPostShipping]);
 
   const autoMax = useMemo(() => {
     const raw = (costPostShipping || 0) + 10;
-    const decimal = raw % 1;
-    if (decimal < 0.5) {
-      return Math.floor(raw);
-    } else {
-      return Math.ceil(raw);
-    }
+    return Math.ceil(raw);
   }, [costPostShipping]);
 
   const [minPrice, setMinPrice] = useState<number | undefined>(initial?.minPrice ?? autoMin);
@@ -818,12 +851,12 @@ function PurchaseForm({
           const nextStock = (it.stock ?? 0) + unitsLine;
           const costPre = l.unitCost;
           const costPost = l.unitCostPostShipping ?? l.unitCost;
-          const autoMin = it.minPrice ?? costPost + 5;
+          const autoMin = Math.ceil(costPost + 5);
           const avgComp =
             it.competitorAPrice && it.competitorBPrice
               ? (it.competitorAPrice + it.competitorBPrice) / 2
               : it.maxPrice;
-          const nextMax = it.maxPrice ?? avgComp ?? autoMin + 5;
+          const nextMax = it.maxPrice ?? avgComp ?? Math.ceil(costPost + 10);
           const nextMinRev = (autoMin ?? 0) - costPost;
           const nextMaxRev = (nextMax ?? 0) - costPost;
           return {
@@ -846,16 +879,16 @@ function PurchaseForm({
           if (it.id !== l.itemId) return it;
           const costPre = l.unitCost;
           const costPost = l.unitCostPostShipping ?? l.unitCost;
-          const autoMin = costPost + 5;
-          const autoMax = costPost + 10;
+          const autoMin = Math.ceil(costPost + 5);
+          const autoMax = Math.ceil(costPost + 10);
           const nextMinRev = autoMin - costPost;
           const nextMaxRev = autoMax - costPost;
           return {
             ...it,
             costPreShipping: costPre,
             costPostShipping: costPost,
-            minPrice: Math.round(autoMin * 2) / 2, // Round to nearest 0.5
-            maxPrice: Math.round(autoMax * 2) / 2, // Round to nearest 0.5
+            minPrice: autoMin,
+            maxPrice: autoMax,
             minRevenue: nextMinRev,
             maxRevenue: nextMaxRev,
             updatedAt: nowIso(),
