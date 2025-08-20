@@ -941,19 +941,27 @@ function PurchaseForm({
     // Process revenue withdrawal if revenue is being used
     try {
       if (revenueToUse > 0) {
+        // Create a temporary database with the purchase included for processing
+        const exists = db.purchases.find(purchase => purchase.id === p.id);
+        const tempPurchases = exists
+          ? db.purchases.map(purchase => (purchase.id === p.id ? p : purchase))
+          : [...db.purchases, p];
+
         const result = RevenueService.processPurchaseWithRevenue(
-          { ...db, items: itemsUpdated },
+          { ...db, items: itemsUpdated, purchases: tempPurchases },
           p,
           revenueToUse,
           withdrawalReason,
           withdrawalNotes
         );
-        // Pass the updated DB to onSave which should include the revenue withdrawal
-        onSave(
-          result.updatedDb.purchases.find(purchase => purchase.id === p.id)!,
-          itemsUpdated,
-          result.updatedDb.revenueWithdrawals
-        );
+
+        // Find the updated purchase from the result
+        const updatedPurchase = result.updatedDb.purchases.find(purchase => purchase.id === p.id);
+        if (!updatedPurchase) {
+          throw new Error('Failed to process purchase with revenue');
+        }
+
+        onSave(updatedPurchase, itemsUpdated, result.updatedDb.revenueWithdrawals);
       } else {
         onSave(p, itemsUpdated);
       }
