@@ -6,16 +6,29 @@ const STORAGE_KEY = 'nim-db-v1';
 export function loadDB(): DB {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) {
-    const empty: DB = { items: [], purchases: [], sales: [], settings: { ...DEFAULT_SETTINGS } };
+    const empty: DB = {
+      items: [],
+      purchases: [],
+      sales: [],
+      settings: { ...DEFAULT_SETTINGS },
+      revenueWithdrawals: [],
+    };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(empty));
     return empty;
   }
   try {
     const parsed: DB = JSON.parse(raw);
     if (!parsed.settings) parsed.settings = { ...DEFAULT_SETTINGS };
+    if (!parsed.revenueWithdrawals) parsed.revenueWithdrawals = [];
     return parsed;
   } catch {
-    const empty: DB = { items: [], purchases: [], sales: [], settings: { ...DEFAULT_SETTINGS } };
+    const empty: DB = {
+      items: [],
+      purchases: [],
+      sales: [],
+      settings: { ...DEFAULT_SETTINGS },
+      revenueWithdrawals: [],
+    };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(empty));
     return empty;
   }
@@ -42,6 +55,7 @@ export function importBackup(json: string) {
     if ('settings' in parsed && 'items' in parsed && 'purchases' in parsed && 'sales' in parsed) {
       // New format - validate and use directly
       if (!parsed.settings) parsed.settings = { ...DEFAULT_SETTINGS };
+      if (!parsed.revenueWithdrawals) parsed.revenueWithdrawals = [];
       dbData = parsed as DB;
     } else if ('items' in parsed) {
       // Old format - convert it

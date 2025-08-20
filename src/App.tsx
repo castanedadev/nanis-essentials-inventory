@@ -17,6 +17,9 @@ import {
 import { ImageUpload } from './components/ImageUpload';
 import { ItemCardImage } from './components/ItemImageDisplay';
 import { InventoryFilters, InventorySortOption } from './components/InventoryFilters';
+import { RevenueManager, RevenueSummaryCard } from './components/RevenueManager';
+import { RevenueWithdrawals } from './components/RevenueWithdrawals';
+import { RevenueService } from './lib/revenueService';
 
 type Tab = 'inventory' | 'purchases' | 'sales' | 'analytics';
 
@@ -678,7 +681,7 @@ function PurchasesPage({ db, persist }: { db: DB; persist: (_db: DB) => void }) 
           db={db}
           initial={editing ?? undefined}
           onClose={() => setShowForm(false)}
-          onSave={(purchase, updatedItems) => {
+          onSave={(purchase, updatedItems, updatedWithdrawals) => {
             const exists = db.purchases.find(p => p.id === purchase.id);
             let itemsWorking = [...db.items];
             if (exists) {
@@ -701,7 +704,15 @@ function PurchasesPage({ db, persist }: { db: DB; persist: (_db: DB) => void }) 
             const nextPurchases = exists
               ? db.purchases.map(p => (p.id === purchase.id ? purchase : p))
               : [...db.purchases, purchase];
-            persist({ ...db, items: itemsWorking, purchases: nextPurchases });
+
+            const nextWithdrawals = updatedWithdrawals ?? db.revenueWithdrawals;
+
+            persist({
+              ...db,
+              items: itemsWorking,
+              purchases: nextPurchases,
+              revenueWithdrawals: nextWithdrawals,
+            });
             setShowForm(false);
           }}
         />
@@ -738,7 +749,11 @@ function PurchaseForm({
   db: DB;
   initial?: Purchase;
   onClose: () => void;
-  onSave: (_purchase: Purchase, _updatedItems: InventoryItem[]) => void;
+  onSave: (
+    _purchase: Purchase,
+    _updatedItems: InventoryItem[],
+    _revenueWithdrawals?: any[]
+  ) => void;
 }) {
   const [items, setItems] = useState<InventoryItem[]>(db.items);
   const [lines, setLines] = useState<PurchaseLine[]>(
@@ -772,6 +787,12 @@ function PurchaseForm({
   });
   const [showAddItem, setShowAddItem] = useState(false);
   const [addItemForLineId, setAddItemForLineId] = useState<string | null>(null);
+
+  // Revenue re-investment state
+  const [showRevenueManager, setShowRevenueManager] = useState(false);
+  const [revenueToUse, setRevenueToUse] = useState<number>(initial?.revenueUsed ?? 0);
+  const [withdrawalReason, setWithdrawalReason] = useState<string>('Business re-investment');
+  const [withdrawalNotes, setWithdrawalNotes] = useState<string>('');
 
   function calcSubtotal(ls: PurchaseLine[]) {
     return ls.reduce((acc, l) => acc + l.quantity * l.unitCost, 0);
@@ -838,6 +859,8 @@ function PurchaseForm({
       unitCostPostShipping: l.unitCost + perUnitTax + perUnitUS + perUnitIntl,
     }));
 
+    const totalCost = subtotal + tax + shipUS + shipIntl;
+
     const p: Purchase = {
       id: initial?.id ?? uid(),
       createdAt: initial?.createdAt ?? nowIso(),
@@ -850,7 +873,10 @@ function PurchaseForm({
       shippingIntl: shipIntl,
       weightLbs: weight,
       totalUnits: units,
-      totalCost: subtotal + tax + shipUS + shipIntl,
+      totalCost,
+      revenueUsed: revenueToUse,
+      paymentSource: RevenueService.calculatePaymentBreakdown(totalCost, revenueToUse)
+        .paymentSource,
     };
 
     let itemsUpdated = [...items];
@@ -912,7 +938,29 @@ function PurchaseForm({
       });
     }
 
-    onSave(p, itemsUpdated);
+    // Process revenue withdrawal if revenue is being used
+    try {
+      if (revenueToUse > 0) {
+        const result = RevenueService.processPurchaseWithRevenue(
+          { ...db, items: itemsUpdated },
+          p,
+          revenueToUse,
+          withdrawalReason,
+          withdrawalNotes
+        );
+        // Pass the updated DB to onSave which should include the revenue withdrawal
+        onSave(
+          result.updatedDb.purchases.find(purchase => purchase.id === p.id)!,
+          itemsUpdated,
+          result.updatedDb.revenueWithdrawals
+        );
+      } else {
+        onSave(p, itemsUpdated);
+      }
+    } catch (error) {
+      alert(`Error processing purchase: ${error}`);
+      return;
+    }
   }
 
   return (
@@ -1126,6 +1174,60 @@ function PurchaseForm({
         </div>
       </div>
 
+      {/* Revenue Re-investment Section */}
+      <div className="section revenue-section">
+        <div className="section-header">
+          <h3>Payment & Revenue Re-investment</h3>
+          <RevenueSummaryCard db={db} />
+        </div>
+
+        {revenueToUse > 0 && (
+          <div className="revenue-breakdown">
+            <div className="breakdown-info">
+              <div className="breakdown-row">
+                <span>Total Cost:</span>
+                <span>{fmtUSD(subtotal + tax + shipUS + shipIntl)}</span>
+              </div>
+              <div className="breakdown-row revenue">
+                <span>Using Revenue:</span>
+                <span className="green">-{fmtUSD(revenueToUse)}</span>
+              </div>
+              <div className="breakdown-row external">
+                <span>External Payment:</span>
+                <span className="blue">
+                  {fmtUSD(subtotal + tax + shipUS + shipIntl - revenueToUse)}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="revenue-actions">
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => setShowRevenueManager(true)}
+            data-testid="use-revenue-btn"
+          >
+            {revenueToUse > 0 ? 'Adjust Revenue Usage' : 'Use Revenue for Purchase'}
+          </button>
+          {revenueToUse > 0 && (
+            <button
+              type="button"
+              className="btn-link"
+              onClick={() => {
+                setRevenueToUse(0);
+                setWithdrawalReason('Business re-investment');
+                setWithdrawalNotes('');
+              }}
+              data-testid="clear-revenue-btn"
+            >
+              Clear Revenue Usage
+            </button>
+          )}
+        </div>
+      </div>
+
       <div className="row gap end">
         <button
           className="primary"
@@ -1148,6 +1250,18 @@ function PurchaseForm({
           />
         </div>
       )}
+
+      <RevenueManager
+        db={db}
+        isVisible={showRevenueManager}
+        onClose={() => setShowRevenueManager(false)}
+        totalCost={subtotal + tax + shipUS + shipIntl}
+        onApplyRevenue={(amount, reason, notes) => {
+          setRevenueToUse(amount);
+          setWithdrawalReason(reason);
+          setWithdrawalNotes(notes || '');
+        }}
+      />
     </Modal>
   );
 }
@@ -1800,6 +1914,8 @@ function AnalyticsPage({ db }: { db: DB }) {
     return db.items.find(i => i.id === topId);
   }, [db.sales, db.items]);
 
+  const revenueStats = RevenueService.getRevenueStats(db);
+
   const mostExpensive = db.items.reduce(
     (a, b) => ((b.maxPrice ?? 0) > (a?.maxPrice ?? 0) ? b : a),
     undefined as InventoryItem | undefined
@@ -1932,6 +2048,22 @@ function AnalyticsPage({ db }: { db: DB }) {
           <div className="blue">{fmtUSD(totalInvWithoutShipping)}</div>
         </div>
 
+        {/* Revenue Analytics */}
+        <div className="card" data-testid="available-revenue-card">
+          <div className="card-title">Available Revenue</div>
+          <div className="green">{fmtUSD(revenueStats.availableRevenue)}</div>
+        </div>
+
+        <div className="card" data-testid="revenue-reinvested-card">
+          <div className="card-title">Revenue Re-invested</div>
+          <div className="orange">{fmtUSD(revenueStats.totalWithdrawn)}</div>
+        </div>
+
+        <div className="card" data-testid="revenue-utilization-card">
+          <div className="card-title">Revenue Utilization Rate</div>
+          <div className="purple">{revenueStats.revenueUtilizationRate.toFixed(1)}%</div>
+        </div>
+
         {/* Sales by payment method (only show when count > 0) */}
         {salesByMethod.cash?.count > 0 && (
           <div className="card subcard" data-testid="sales-by-cash-card">
@@ -1975,6 +2107,13 @@ function AnalyticsPage({ db }: { db: DB }) {
           </div>
         )}
       </div>
+
+      {/* Revenue Withdrawals Section */}
+      {db.revenueWithdrawals.length > 0 && (
+        <div className="section">
+          <RevenueWithdrawals db={db} />
+        </div>
+      )}
     </div>
   );
 }
