@@ -2,6 +2,8 @@ export type Category = 'Hair Care' | 'Body Care' | 'Makeup' | 'Fragrance' | 'Ski
 
 export type PaymentMethod = 'cash' | 'transfer' | 'installments';
 
+export type PaymentSource = 'external' | 'revenue' | 'mixed';
+
 export interface ItemImage {
   id: string;
   name: string; // Original filename
@@ -65,6 +67,9 @@ export interface Purchase {
   // Derived
   totalUnits: number; // includes sub-items
   totalCost: number; // subtotal + tax + shippingUS + shippingIntl
+  // Revenue re-investment
+  revenueUsed?: number; // Amount of revenue used to pay for this purchase
+  paymentSource?: PaymentSource; // How this purchase was paid for
 }
 
 export interface SaleLine {
@@ -99,6 +104,16 @@ export interface DB {
   purchases: Purchase[];
   sales: Sale[];
   settings: Settings;
+  revenueWithdrawals: RevenueWithdrawal[]; // Track revenue withdrawals for re-investment
+}
+
+export interface RevenueWithdrawal {
+  id: string;
+  amount: number;
+  reason: string;
+  withdrawnAt: string; // ISO timestamp
+  linkedPurchaseId?: string; // Optional link to the purchase this funded
+  notes?: string;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
