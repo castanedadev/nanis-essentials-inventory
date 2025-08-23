@@ -999,6 +999,12 @@ select {
   max-height: 1000px;
 }
 
+.sale-items-list {
+  margin-top: 4px;
+  padding-top: 4px;
+  text-align: left;
+}
+
 .sale-item-grouped {
   padding: 10px 16px;
   border-bottom: 1px solid #f1f5f9;
