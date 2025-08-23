@@ -200,6 +200,12 @@ function InventoryPage({
           const bVal = b.minPrice ?? Number.NEGATIVE_INFINITY;
           return bVal - aVal;
         });
+      case 'outOfStock':
+        return copy.sort((a, b) => {
+          const aStock = a.stock ?? 0;
+          const bStock = b.stock ?? 0;
+          return aStock - bStock;
+        });
       case 'inStock':
       default:
         return copy.sort((a, b) => {
@@ -1542,8 +1548,18 @@ function SalesPage({ db, persist }: { db: DB; persist: (_db: DB) => void }) {
                       <div className="sale-items">
                         {itemCount} item{itemCount !== 1 ? 's' : ''}
                       </div>
+                      <div className="sale-items-list">
+                        {s.lines.map(l => {
+                          const item = db.items.find(i => i.id === l.itemId);
+                          return (
+                            <div key={l.id}>
+                              {item?.name} ({l.quantity})
+                            </div>
+                          );
+                        })}
+                      </div>
                       <div className="sale-total">{fmtUSD(s.totalAmount)}</div>
-                      <div className="sale-actions row gap end">
+                      <div className="sale-actions gap">
                         <button
                           onClick={() => {
                             setEditing(s);

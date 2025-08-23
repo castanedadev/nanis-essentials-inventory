@@ -2,6 +2,7 @@ import React from 'react';
 
 export type InventorySortOption =
   | 'inStock'
+  | 'outOfStock'
   | 'nameAsc'
   | 'nameDesc'
   | 'minPriceAsc'
@@ -82,6 +83,7 @@ export function InventoryFilters({
               Sort by
             </option>
             <option value="inStock">Stock Level (High → Low)</option>
+            <option value="outOfStock">Stock Level (Low → High)</option>
             <option value="nameAsc">Name (A–Z)</option>
             <option value="nameDesc">Name (Z–A)</option>
             <option value="minPriceAsc">Min Price (Low → High)</option>
