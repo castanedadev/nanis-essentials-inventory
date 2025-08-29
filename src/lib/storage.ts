@@ -12,6 +12,7 @@ export function loadDB(): DB {
       sales: [],
       settings: { ...DEFAULT_SETTINGS },
       revenueWithdrawals: [],
+      transactions: [],
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(empty));
     return empty;
@@ -20,6 +21,7 @@ export function loadDB(): DB {
     const parsed: DB = JSON.parse(raw);
     if (!parsed.settings) parsed.settings = { ...DEFAULT_SETTINGS };
     if (!parsed.revenueWithdrawals) parsed.revenueWithdrawals = [];
+    if (!parsed.transactions) parsed.transactions = [];
     return parsed;
   } catch {
     const empty: DB = {
@@ -28,6 +30,7 @@ export function loadDB(): DB {
       sales: [],
       settings: { ...DEFAULT_SETTINGS },
       revenueWithdrawals: [],
+      transactions: [],
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(empty));
     return empty;
@@ -56,6 +59,7 @@ export function importBackup(json: string) {
       // New format - validate and use directly
       if (!parsed.settings) parsed.settings = { ...DEFAULT_SETTINGS };
       if (!parsed.revenueWithdrawals) parsed.revenueWithdrawals = [];
+      if (!parsed.transactions) parsed.transactions = [];
       dbData = parsed as DB;
     } else if ('items' in parsed) {
       // Old format - convert it
