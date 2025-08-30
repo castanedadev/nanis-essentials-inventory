@@ -105,6 +105,7 @@ export interface DB {
   sales: Sale[];
   settings: Settings;
   revenueWithdrawals: RevenueWithdrawal[]; // Track revenue withdrawals for re-investment
+  transactions: Transaction[]; // Track business expenses and fees
 }
 
 export interface RevenueWithdrawal {
@@ -114,6 +115,23 @@ export interface RevenueWithdrawal {
   withdrawnAt: string; // ISO timestamp
   linkedPurchaseId?: string; // Optional link to the purchase this funded
   notes?: string;
+}
+
+export type TransactionType = 'expense' | 'fee';
+
+export interface Transaction {
+  id: string;
+  type: TransactionType;
+  amount: number;
+  description: string;
+  category: string; // e.g., 'Packaging', 'Marketing', 'Fees', 'Equipment'
+  notes?: string;
+  createdAt: string; // ISO timestamp
+  paymentMethod?: PaymentMethod;
+  paymentSource?: PaymentSource;
+  // Mixed source breakdown (only when paymentSource === 'mixed')
+  revenueAmount?: number; // Amount paid from business revenue
+  externalAmount?: number; // Amount paid from external funds
 }
 
 export const DEFAULT_SETTINGS: Settings = {

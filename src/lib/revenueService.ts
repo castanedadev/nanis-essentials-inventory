@@ -1,4 +1,4 @@
-import { DB, RevenueWithdrawal, Purchase, PaymentSource } from '../types/models';
+import { DB, RevenueWithdrawal, Purchase, PaymentSource, Transaction } from '../types/models';
 import { uid, nowIso } from './utils';
 
 /**
@@ -18,6 +18,15 @@ export class RevenueService {
    */
   static calculateTotalWithdrawn(db: DB): number {
     return db.revenueWithdrawals.reduce((total, withdrawal) => total + withdrawal.amount, 0);
+  }
+
+  /**
+   * Calculate total transaction withdrawals from revenue
+   */
+  static calculateTotalTransactionWithdrawals(db: DB): number {
+    return db.revenueWithdrawals
+      .filter(w => w.reason.startsWith('Transaction:'))
+      .reduce((total, withdrawal) => total + withdrawal.amount, 0);
   }
 
   /**
@@ -143,6 +152,62 @@ export class RevenueService {
       updatedDb,
       withdrawal,
       paymentBreakdown,
+    };
+  }
+
+  /**
+   * Process a transaction that uses revenue as payment source
+   */
+  static processTransactionWithRevenue(
+    db: DB,
+    transaction: Transaction
+  ): {
+    updatedDb: DB;
+    withdrawals: RevenueWithdrawal[];
+    error?: string;
+  } {
+    const withdrawals: RevenueWithdrawal[] = [];
+
+    // Calculate revenue amounts to withdraw
+    let revenueToWithdraw = 0;
+
+    if (transaction.paymentSource === 'revenue') {
+      revenueToWithdraw = transaction.amount;
+    } else if (transaction.paymentSource === 'mixed' && transaction.revenueAmount) {
+      revenueToWithdraw = transaction.revenueAmount;
+    }
+
+    // Validate revenue availability
+    if (revenueToWithdraw > 0) {
+      if (!this.canWithdrawRevenue(db, revenueToWithdraw)) {
+        const available = this.calculateAvailableRevenue(db);
+        return {
+          updatedDb: db,
+          withdrawals: [],
+          error: `Insufficient revenue available. Need ${revenueToWithdraw.toFixed(2)}, but only ${available.toFixed(2)} available.`,
+        };
+      }
+
+      // Create withdrawal record
+      const withdrawal = this.createRevenueWithdrawal(
+        revenueToWithdraw,
+        `Transaction: ${transaction.description}`,
+        undefined, // no linked purchase for transactions
+        `${transaction.type} - ${transaction.category}`
+      );
+
+      withdrawals.push(withdrawal);
+    }
+
+    const updatedDb: DB = {
+      ...db,
+      revenueWithdrawals:
+        revenueToWithdraw > 0 ? [...db.revenueWithdrawals, ...withdrawals] : db.revenueWithdrawals,
+    };
+
+    return {
+      updatedDb,
+      withdrawals,
     };
   }
 
