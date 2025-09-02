@@ -140,11 +140,14 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
                   <option value="" disabled>
                     Select Item
                   </option>
-                  {db.items.map(i => (
-                    <option key={i.id} value={i.id}>
-                      {i.name}
-                    </option>
-                  ))}
+                  {db.items
+                    .slice()
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map(i => (
+                      <option key={i.id} value={i.id}>
+                        {i.name}
+                      </option>
+                    ))}
                 </select>
               </div>
               <div>
