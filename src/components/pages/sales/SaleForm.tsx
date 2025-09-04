@@ -141,6 +141,7 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
                     Select Item
                   </option>
                   {db.items
+                    .filter(i => i.stock > 0)
                     .slice()
                     .sort((a, b) => a.name.localeCompare(b.name))
                     .map(i => (
