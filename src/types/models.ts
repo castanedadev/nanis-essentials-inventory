@@ -4,6 +4,13 @@ export type PaymentMethod = 'cash' | 'transfer' | 'installments';
 
 export type PaymentSource = 'external' | 'revenue' | 'mixed';
 
+export type SalesChannel =
+  | 'facebook_marketplace'
+  | 'instagram'
+  | 'tiktok'
+  | 'family_friends'
+  | 'other';
+
 export interface ItemImage {
   id: string;
   name: string; // Original filename
@@ -89,6 +96,7 @@ export interface Sale {
   createdAt: string; // ISO
   buyerName?: string; // Name of the buyer
   paymentMethod: PaymentMethod;
+  channel?: SalesChannel; // Sales channel where the sale originated
   installments?: InstallmentPlan;
   lines: SaleLine[];
   totalAmount: number;
