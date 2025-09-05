@@ -1,6 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { Modal } from '../../shared/Modal';
-import { DB, Sale, SaleLine, InventoryItem, PaymentMethod } from '../../../types/models';
+import {
+  DB,
+  Sale,
+  SaleLine,
+  InventoryItem,
+  PaymentMethod,
+  SalesChannel,
+} from '../../../types/models';
 import { parseNumber, uid, nowIso, fmtUSD } from '../../../lib/utils';
 
 interface SaleFormProps {
@@ -25,6 +32,7 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(
     initial?.paymentMethod ?? 'cash'
   );
+  const [channel, setChannel] = useState<SalesChannel | ''>(initial?.channel ?? '');
   const [numberOfPayments, setNumberOfPayments] = useState<number>(
     initial?.installments?.numberOfPayments ?? 2
   );
@@ -84,6 +92,7 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
       createdAt: initial?.createdAt ?? nowIso(),
       buyerName: buyerName.trim() || undefined,
       paymentMethod,
+      channel: channel || undefined,
       installments:
         paymentMethod === 'installments' ? { numberOfPayments, amountPerPayment } : undefined,
       lines,
@@ -264,6 +273,17 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
               </div>
             )}
           </div>
+        </div>
+        <div>
+          <label>Sales Channel (optional)</label>
+          <select value={channel} onChange={e => setChannel(e.target.value as SalesChannel | '')}>
+            <option value="">Select Channel</option>
+            <option value="facebook_marketplace">Facebook Marketplace</option>
+            <option value="instagram">Instagram</option>
+            <option value="tiktok">TikTok</option>
+            <option value="family_friends">Family/Friends</option>
+            <option value="other">Other</option>
+          </select>
         </div>
         <div>
           <label>Payment Method</label>
