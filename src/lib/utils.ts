@@ -17,3 +17,16 @@ export const isSameMonth = (iso: string) => {
   const s = startOfMonth();
   return d >= s;
 };
+
+export const isCurrentMonth = (iso: string) => {
+  const d = new Date(iso);
+  const now = new Date();
+  return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+};
+
+export const isPreviousMonth = (iso: string) => {
+  const d = new Date(iso);
+  const now = new Date();
+  const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  return d.getMonth() === prevMonth.getMonth() && d.getFullYear() === prevMonth.getFullYear();
+};
