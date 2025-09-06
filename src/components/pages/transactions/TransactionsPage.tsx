@@ -90,7 +90,7 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
         </div>
       </div>
 
-      <div className="cards" data-testid="transaction-cards">
+      <div className="cards two-cols" data-testid="transaction-cards">
         {db.transactions
           .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
           .map(t => (

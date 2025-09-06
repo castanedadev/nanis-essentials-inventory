@@ -1,8 +1,11 @@
 import React, { useState, useRef } from 'react';
-import { ItemImage } from '../types/models';
-import { processImageFile, IMAGE_CONFIG } from '../lib/imageUtils';
+import { Button } from '../atoms/Button';
+import { Text } from '../atoms/Typography';
+import { Icon } from '../atoms/Icon';
+import { ItemImage } from '../../types/models';
+import { processImageFile, IMAGE_CONFIG } from '../../lib/imageUtils';
 
-interface ImageUploadProps {
+interface ImageUploadSectionProps {
   images: ItemImage[];
   onImagesChange: (_images: ItemImage[]) => void;
   primaryImageId?: string;
@@ -10,13 +13,13 @@ interface ImageUploadProps {
   maxImages?: number;
 }
 
-export function ImageUpload({
+export function ImageUploadSection({
   images,
   onImagesChange,
   primaryImageId,
   onPrimaryImageChange,
   maxImages = IMAGE_CONFIG.maxImagesPerItem,
-}: ImageUploadProps) {
+}: ImageUploadSectionProps) {
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -46,7 +49,6 @@ export function ImageUpload({
       const updatedImages = [...images, ...newImages];
       onImagesChange(updatedImages);
 
-      // Set first uploaded image as primary if no primary exists
       if (!primaryImageId && newImages.length > 0) {
         onPrimaryImageChange(newImages[0].id);
       }
@@ -85,7 +87,6 @@ export function ImageUpload({
     const updatedImages = images.filter(img => img.id !== imageId);
     onImagesChange(updatedImages);
 
-    // If removing primary image, set new primary
     if (primaryImageId === imageId && updatedImages.length > 0) {
       onPrimaryImageChange(updatedImages[0].id);
     }
@@ -97,9 +98,10 @@ export function ImageUpload({
 
   return (
     <div className="image-upload-container">
-      <label>Product Images</label>
+      <label>
+        <Text variant="label">Product Images</Text>
+      </label>
 
-      {/* Upload Area */}
       <div
         className={`image-dropzone ${dragActive ? 'drag-active' : ''} ${uploading ? 'uploading' : ''}`}
         onDragEnter={handleDrag}
@@ -120,23 +122,22 @@ export function ImageUpload({
         {uploading ? (
           <div className="upload-spinner">
             <div className="spinner"></div>
-            <p>Processing images...</p>
+            <Text>Processing images...</Text>
           </div>
         ) : (
           <div className="upload-prompt">
             <div className="upload-icon">📸</div>
-            <p>
+            <Text>
               <strong>Click or drag images here</strong>
-            </p>
-            <p className="upload-hint">
+            </Text>
+            <Text variant="small" className="upload-hint">
               JPEG, PNG, WebP • Max {IMAGE_CONFIG.maxFileSize / (1024 * 1024)}MB each • Up to{' '}
               {maxImages} images
-            </p>
+            </Text>
           </div>
         )}
       </div>
 
-      {/* Image Preview Grid */}
       {images.length > 0 && (
         <div className="image-preview-grid">
           {images.map(image => (
@@ -147,28 +148,34 @@ export function ImageUpload({
               <img src={image.dataUrl} alt={image.name} />
 
               <div className="image-overlay">
-                <button
-                  type="button"
+                <Button
+                  variant="icon"
                   className={`primary-btn ${primaryImageId === image.id ? 'active' : ''}`}
                   onClick={() => setPrimaryImage(image.id)}
                   title="Set as primary image"
                 >
-                  {primaryImageId === image.id ? '⭐' : '☆'}
-                </button>
+                  <Icon name={primaryImageId === image.id ? 'star-filled' : 'star-empty'} />
+                </Button>
 
-                <button
-                  type="button"
+                <Button
+                  variant="icon"
                   className="remove-btn"
                   onClick={() => removeImage(image.id)}
                   title="Remove image"
                 >
-                  ✕
-                </button>
+                  <Icon name="close" />
+                </Button>
               </div>
 
               <div className="image-info">
-                <div className="image-name">{image.name}</div>
-                {primaryImageId === image.id && <div className="primary-badge">Primary</div>}
+                <Text variant="small" className="image-name">
+                  {image.name}
+                </Text>
+                {primaryImageId === image.id && (
+                  <div className="primary-badge">
+                    <Text variant="small">Primary</Text>
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -177,7 +184,9 @@ export function ImageUpload({
 
       {images.length > 0 && (
         <div className="upload-stats">
-          {images.length} / {maxImages} images
+          <Text variant="small">
+            {images.length} / {maxImages} images
+          </Text>
         </div>
       )}
     </div>

@@ -1,4 +1,6 @@
 import React from 'react';
+import { SearchInput } from '../../atoms/Input';
+import { Text } from '../../atoms/Typography';
 import { fmtUSD } from '../../../lib/utils';
 
 interface SearchSectionProps {
@@ -21,30 +23,25 @@ export function SearchSection({
   onCollapseAll,
 }: SearchSectionProps) {
   return (
-    <div className="search-section">
-      <div className="search-input-container">
-        <input
-          type="text"
+    <div className="filters-container">
+      <div className="filters-row">
+        <SearchInput
           placeholder="Search by customer, sale id, payment, amount or date..."
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
-          className="search-input"
+          onClear={() => setSearchQuery('')}
+          showClearButton={!!searchQuery}
         />
-        {searchQuery && (
-          <button className="search-clear" onClick={() => setSearchQuery('')} title="Clear search">
-            ✕
-          </button>
-        )}
-      </div>
-      <div className="row gap">
-        <div className="search-results-info">
-          {summaryStats.totalSales} sales | {fmtUSD(summaryStats.totalAmount)} |{' '}
-          {summaryStats.uniqueCustomers} customers
-        </div>
         <div className="group-controls">
           <button onClick={onExpandAll}>Expand All</button>
           <button onClick={onCollapseAll}>Collapse All</button>
         </div>
+      </div>
+      <div className="results-info-modern">
+        <Text variant="small">
+          {summaryStats.totalSales} sales | {fmtUSD(summaryStats.totalAmount)} |{' '}
+          {summaryStats.uniqueCustomers} customers
+        </Text>
       </div>
     </div>
   );

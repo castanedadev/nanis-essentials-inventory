@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { InventoryForm } from './InventoryForm';
-import { ItemCardImage } from '../../ItemImageDisplay';
-import { InventoryFilters, InventorySortOption } from '../../InventoryFilters';
+import { InventoryPageTemplate } from '../../templates/InventoryPageTemplate';
+import { SortOption } from '../../molecules/SearchFilters';
 import { DB, InventoryItem } from '../../../types/models';
-import { fmtUSD, nowIso } from '../../../lib/utils';
+import { nowIso } from '../../../lib/utils';
 
 interface InventoryPageProps {
   db: DB;
@@ -11,11 +11,11 @@ interface InventoryPageProps {
   onRefresh: () => void;
 }
 
-export function InventoryPage({ db, persist, onRefresh }: InventoryPageProps) {
+export function InventoryPage({ db, persist }: InventoryPageProps) {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<InventoryItem | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<InventorySortOption>('inStock');
+  const [sortBy, setSortBy] = useState<SortOption>('inStock');
 
   const items = db.items;
 
@@ -91,145 +91,70 @@ export function InventoryPage({ db, persist, onRefresh }: InventoryPageProps) {
     persist({ ...db, items: updatedItems });
   };
 
+  const headerActions = [
+    {
+      label: '💰 Recalculate Prices',
+      onClick: handleRecalculatePrices,
+      title: 'Recalculate all item prices using current pricing logic',
+      testId: 'recalculate-prices-btn',
+    },
+    {
+      label: '+ Add Item',
+      onClick: () => {
+        setEditing(null);
+        setShowForm(true);
+      },
+      variant: 'primary' as const,
+    },
+  ];
+
+  const sortOptions = [
+    { value: '', label: 'Sort by', disabled: true },
+    { value: 'inStock', label: 'Stock Level (High → Low)' },
+    { value: 'outOfStock', label: 'Stock Level (Low → High)' },
+    { value: 'nameAsc', label: 'Name (A–Z)' },
+    { value: 'nameDesc', label: 'Name (Z–A)' },
+    { value: 'minPriceAsc', label: 'Min Price (Low → High)' },
+    { value: 'minPriceDesc', label: 'Min Price (High → Low)' },
+  ];
+
+  const formContent = showForm ? (
+    <InventoryForm
+      initial={editing ?? undefined}
+      onClose={() => setShowForm(false)}
+      onSave={item => {
+        const exists = db.items.find(i => i.id === item.id);
+        const nextItems = exists
+          ? db.items.map(i => (i.id === item.id ? item : i))
+          : [...db.items, item];
+        persist({ ...db, items: nextItems });
+        setShowForm(false);
+      }}
+    />
+  ) : null;
+
   return (
-    <div className="page">
-      <div className="page-header">
-        <h2>Inventory Management</h2>
-        <div className="row gap">
-          <button
-            onClick={onRefresh}
-            title="Refresh inventory data"
-            data-testid="refresh-inventory-btn"
-          >
-            🔄 Refresh
-          </button>
-          <button
-            onClick={handleRecalculatePrices}
-            title="Recalculate all item prices using current pricing logic"
-            data-testid="recalculate-prices-btn"
-          >
-            💰 Recalculate Prices
-          </button>
-          <button
-            className="primary"
-            onClick={() => {
-              setEditing(null);
-              setShowForm(true);
-            }}
-          >
-            + Add Item
-          </button>
-        </div>
-      </div>
-
-      <InventoryFilters
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        sortBy={sortBy}
-        setSortBy={setSortBy}
-        totalCount={items.length}
-        filteredCount={filteredItems.length}
-      />
-
-      <div className="cards two-cols" data-testid="inventory-cards">
-        {sortedItems.map(it => (
-          <div
-            key={it.id}
-            className={`card item-card ${it.stock === 0 ? 'out-of-stock-card' : ''}`}
-            data-testid="item-card"
-            data-name={it.name}
-          >
-            <div className="card-row">
-              <div className="card-title">{it.name}</div>
-              <div className="muted">{new Date(it.createdAt).toLocaleDateString()}</div>
-            </div>
-
-            <div className="card-content-with-image">
-              <div className="card-image-section">
-                <ItemCardImage
-                  images={it.images || []}
-                  primaryImageId={it.primaryImageId}
-                  category={it.category}
-                  itemName={it.name}
-                />
-              </div>
-
-              <div className="card-details-section">
-                {/* Category directly under the title to free space for Price Range */}
-                <div className="category-inline">
-                  <span className="label">Category:</span>
-                  <span className="value">{it.category}</span>
-                </div>
-
-                {/* Price range on its own full-width row */}
-                <div className="item-meta-row price-range-row">
-                  <span className="label">Price Range:</span>
-                  <span className="value">
-                    {fmtUSD(it.minPrice ?? 0)}
-                    {'\u00A0-\u00A0'}
-                    {fmtUSD(it.maxPrice ?? 0)}
-                  </span>
-                </div>
-
-                {/* Other meta in two columns */}
-                <div className="grid two meta-grid">
-                  <div className="item-meta-row">
-                    <span className="label">Unit Cost:</span>
-                    <span className="value">
-                      {fmtUSD(it.costPostShipping ?? it.costPreShipping ?? 0)}
-                    </span>
-                  </div>
-                  <div className="item-meta-row">
-                    <span className="label">Stock:</span>
-                    <span className="value">
-                      {it.stock}
-                      {it.stock === 0 && <span className="out-of-stock-badge">out of stock</span>}
-                      {it.stock === 1 && <span className="last-item-badge">last item</span>}
-                    </span>
-                  </div>
-                </div>
-
-                {it.description && <div className="muted item-description">{it.description}</div>}
-              </div>
-            </div>
-
-            <div className="row gap">
-              <button
-                onClick={() => {
-                  setEditing(it);
-                  setShowForm(true);
-                }}
-              >
-                Edit
-              </button>
-              <button className="danger" onClick={() => onDelete(it.id)}>
-                Delete
-              </button>
-            </div>
-          </div>
-        ))}
-        {filteredItems.length === 0 && items.length === 0 && (
-          <div className="empty">No items yet.</div>
-        )}
-        {filteredItems.length === 0 && items.length > 0 && (
-          <div className="empty">No items match your search.</div>
-        )}
-      </div>
-
-      {showForm && (
-        <InventoryForm
-          initial={editing ?? undefined}
-          onClose={() => setShowForm(false)}
-          onSave={item => {
-            const exists = db.items.find(i => i.id === item.id);
-            const nextItems = exists
-              ? db.items.map(i => (i.id === item.id ? item : i))
-              : [...db.items, item];
-            persist({ ...db, items: nextItems });
-            setShowForm(false);
-          }}
-        />
-      )}
-    </div>
+    <InventoryPageTemplate
+      headerActions={headerActions}
+      searchQuery={searchQuery}
+      onSearchChange={setSearchQuery}
+      sortBy={sortBy}
+      onSortChange={setSortBy}
+      sortOptions={sortOptions}
+      totalCount={items.length}
+      filteredCount={filteredItems.length}
+      items={sortedItems}
+      onEditItem={item => {
+        setEditing(item);
+        setShowForm(true);
+      }}
+      onDeleteItem={onDelete}
+      showEmptyState={filteredItems.length === 0 && items.length === 0}
+      showNoResults={filteredItems.length === 0 && items.length > 0}
+      showForm={showForm}
+      formTitle={editing ? 'Edit Item' : 'Add New Item'}
+      onCloseForm={() => setShowForm(false)}
+      formContent={formContent}
+    />
   );
 }
