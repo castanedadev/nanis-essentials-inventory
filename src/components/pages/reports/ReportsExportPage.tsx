@@ -7,13 +7,11 @@ interface ReportsExportPageProps {
 export function ReportsExportPage({ db: _db }: ReportsExportPageProps) {
   const handleExportCSV = (reportType: string) => {
     // This is a placeholder - you can implement CSV export logic here
-    console.log(`Exporting ${reportType} as CSV`);
     alert(`${reportType} export functionality coming soon!`);
   };
 
   const handleExportPDF = (reportType: string) => {
     // This is a placeholder - you can implement PDF export logic here
-    console.log(`Exporting ${reportType} as PDF`);
     alert(`${reportType} PDF export functionality coming soon!`);
   };
 
