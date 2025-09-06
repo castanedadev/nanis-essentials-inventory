@@ -82,7 +82,7 @@ export function PurchasesPage({ db, persist }: PurchasesPageProps) {
         </button>
       </div>
 
-      <div className="cards" data-testid="purchase-cards">
+      <div className="cards two-cols" data-testid="purchase-cards">
         {db.purchases.map(p => (
           <div key={p.id} className="card" data-testid="purchase-card">
             <div className="card-row">

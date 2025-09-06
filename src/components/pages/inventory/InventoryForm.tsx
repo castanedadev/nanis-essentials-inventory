@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Modal } from '../../shared/Modal';
-import { ImageUpload } from '../../ImageUpload';
+import { ImageUploadSection } from '../../organisms/ImageUploadSection';
 import { InventoryItem, Category, ItemImage } from '../../../types/models';
 import { parseNumber, uid, nowIso, fmtUSD } from '../../../lib/utils';
 
@@ -203,7 +203,7 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
         </div>
       </div>
 
-      <ImageUpload
+      <ImageUploadSection
         images={images}
         onImagesChange={setImages}
         primaryImageId={primaryImageId}

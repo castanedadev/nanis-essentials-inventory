@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type Tab = 'inventory' | 'purchases' | 'sales' | 'transactions' | 'analytics';
+export type Tab = 'inventory' | 'purchases' | 'sales' | 'transactions' | 'analytics' | 'reports';
 
 interface TopBarProps {
   active: Tab;
@@ -46,6 +46,12 @@ export function TopBar({ active, setActive, onExport, onImport, onClear }: TopBa
           onClick={() => setActive('analytics')}
         >
           Analytics
+        </button>
+        <button
+          className={active === 'reports' ? 'tab active' : 'tab'}
+          onClick={() => setActive('reports')}
+        >
+          Reports
         </button>
       </div>
       <div className="actions">
