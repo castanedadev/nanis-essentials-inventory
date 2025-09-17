@@ -127,17 +127,41 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
     }
 
     const units = totalUnits();
-    const perUnitTax = units ? tax / units : 0;
-    const perUnitUS = units ? shipUS / units : 0;
-    const perUnitIntl = units ? shipIntl / units : 0;
 
-    const enriched = lines.map(l => ({
-      ...l,
-      perUnitTax,
-      perUnitShippingUS: perUnitUS,
-      perUnitShippingIntl: perUnitIntl,
-      unitCostPostShipping: l.unitCost + perUnitTax + perUnitUS + perUnitIntl,
-    }));
+    // Calculate total actual weight for proportional allocation
+    const totalWeight = lines.reduce((acc, l) => {
+      const item = items.find(item => item.id === l.itemId);
+      const itemWeight = item?.weightLbs ?? 0;
+      const lineUnits = l.quantity + (l.hasSubItems ? (l.subItemsQty ?? 0) : 0);
+      return acc + itemWeight * lineUnits;
+    }, 0);
+
+    // Allocate costs to each purchase line
+    const enriched = lines.map(l => {
+      const item = items.find(item => item.id === l.itemId);
+      const itemWeight = item?.weightLbs ?? 0;
+      const lineUnits = l.quantity + (l.hasSubItems ? (l.subItemsQty ?? 0) : 0);
+      const lineWeight = itemWeight * lineUnits;
+
+      // Proportional tax distribution based on unit cost
+      const lineCost = l.quantity * l.unitCost;
+      const perUnitTax = subtotal > 0 ? (tax * lineCost) / (subtotal * l.quantity) : 0;
+
+      // Equal distribution for US shipping
+      const perUnitShippingUS = shipUS > 0 && units ? shipUS / units : 0;
+
+      // Weight-based distribution for international shipping
+      const weightRatio = totalWeight > 0 ? lineWeight / totalWeight : 0;
+      const perUnitShippingIntl = lineUnits > 0 ? (shipIntl * weightRatio) / lineUnits : 0;
+
+      return {
+        ...l,
+        perUnitTax,
+        perUnitShippingUS,
+        perUnitShippingIntl,
+        unitCostPostShipping: l.unitCost + perUnitTax + perUnitShippingUS + perUnitShippingIntl,
+      };
+    });
 
     const totalCost = subtotal + tax + shipUS + shipIntl;
 
