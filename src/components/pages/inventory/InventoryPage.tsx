@@ -75,27 +75,90 @@ export function InventoryPage({ db, persist }: InventoryPageProps) {
   };
 
   const handleRecalculatePrices = () => {
-    const updatedItems = db.items.map(item => {
-      if (!item.costPostShipping) return item;
-      const autoMin = Math.ceil(item.costPostShipping + 5);
-      const autoMax = Math.ceil(item.costPostShipping + 10);
-      return {
-        ...item,
-        minPrice: autoMin,
-        maxPrice: autoMax,
-        minRevenue: autoMin - item.costPostShipping,
-        maxRevenue: autoMax - item.costPostShipping,
-        updatedAt: nowIso(),
+    // Recalculate unit costs for all items using weight-based allocation
+    const updatedItems = [...db.items];
+    const updatedPurchases = [...db.purchases];
+
+    // Process each purchase to recalculate allocations
+    db.purchases.forEach((purchase, purchaseIndex) => {
+      const { lines, tax, shippingUS, shippingIntl, subtotal } = purchase;
+
+      // Calculate total units and weight for this purchase
+      const totalUnits = lines.reduce(
+        (acc, l) => acc + l.quantity + (l.hasSubItems ? (l.subItemsQty ?? 0) : 0),
+        0
+      );
+      const totalWeight = lines.reduce((acc, l) => {
+        const item = updatedItems.find(item => item.id === l.itemId);
+        const itemWeight = item?.weightLbs ?? 0;
+        const lineUnits = l.quantity + (l.hasSubItems ? (l.subItemsQty ?? 0) : 0);
+        return acc + itemWeight * lineUnits;
+      }, 0);
+
+      // Recalculate allocations for each line
+      const updatedLines = lines.map(l => {
+        const item = updatedItems.find(item => item.id === l.itemId);
+        const itemWeight = item?.weightLbs ?? 0;
+        const lineUnits = l.quantity + (l.hasSubItems ? (l.subItemsQty ?? 0) : 0);
+        const lineWeight = itemWeight * lineUnits;
+
+        // Proportional tax distribution based on unit cost
+        const lineCost = l.quantity * l.unitCost;
+        const perUnitTax = subtotal > 0 ? (tax * lineCost) / (subtotal * l.quantity) : 0;
+
+        // Equal distribution for US shipping
+        const perUnitShippingUS = shippingUS > 0 && totalUnits ? shippingUS / totalUnits : 0;
+
+        // Weight-based distribution for international shipping
+        const weightRatio = totalWeight > 0 ? lineWeight / totalWeight : 0;
+        const perUnitShippingIntl = lineUnits > 0 ? (shippingIntl * weightRatio) / lineUnits : 0;
+
+        return {
+          ...l,
+          perUnitTax,
+          perUnitShippingUS,
+          perUnitShippingIntl,
+          unitCostPostShipping: l.unitCost + perUnitTax + perUnitShippingUS + perUnitShippingIntl,
+        };
+      });
+
+      updatedPurchases[purchaseIndex] = {
+        ...purchase,
+        lines: updatedLines,
       };
+
+      // Update item costs based on most recent purchase
+      updatedLines.forEach(l => {
+        const itemIndex = updatedItems.findIndex(item => item.id === l.itemId);
+        if (itemIndex !== -1) {
+          const costPre = l.unitCost;
+          const costPost = l.unitCostPostShipping ?? l.unitCost;
+          const autoMin = Math.ceil(costPost + 5);
+          const autoMax = Math.ceil(costPost + 10);
+
+          updatedItems[itemIndex] = {
+            ...updatedItems[itemIndex],
+            costPreShipping: costPre,
+            costPostShipping: costPost,
+            minPrice: autoMin,
+            maxPrice: autoMax,
+            minRevenue: autoMin - costPost,
+            maxRevenue: autoMax - costPost,
+            updatedAt: nowIso(),
+          };
+        }
+      });
     });
-    persist({ ...db, items: updatedItems });
+
+    persist({ ...db, items: updatedItems, purchases: updatedPurchases });
   };
 
   const headerActions = [
     {
-      label: '💰 Recalculate Prices',
+      label: '⚖️ Recalculate Unit Costs',
       onClick: handleRecalculatePrices,
-      title: 'Recalculate all item prices using current pricing logic',
+      title:
+        'Recalculate all unit costs using weight-based shipping allocation and proportional tax distribution',
       testId: 'recalculate-prices-btn',
     },
     {

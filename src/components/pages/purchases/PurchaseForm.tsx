@@ -50,9 +50,11 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
       },
     ]
   );
-  const [weight, setWeight] = useState<number>(initial?.weightLbs ?? 0);
+  const [weight, setWeight] = useState<number>(initial?.weightLbs ?? 1);
   const [subtotal, setSubtotal] = useState<number>(initial?.subtotal ?? calcSubtotal(lines));
-  const [tax, setTax] = useState<number>(initial?.tax ?? 0);
+  const taxRate = db.settings?.taxRatePercent ?? DEFAULT_SETTINGS.taxRatePercent;
+  const autoTax = Math.round(subtotal * (taxRate / 100) * 100) / 100; // Round to 2 decimal places
+  const [tax, setTax] = useState<number>(initial?.tax ?? autoTax);
   const [shipUS, setShipUS] = useState<number>(initial?.shippingUS ?? 0);
   const weightCost = db.settings?.weightCostPerLb ?? DEFAULT_SETTINGS.weightCostPerLb;
   const defaultIntl = weight * weightCost;
@@ -73,6 +75,15 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
   const [revenueToUse, setRevenueToUse] = useState<number>(initial?.revenueUsed ?? 0);
   const [withdrawalReason, setWithdrawalReason] = useState<string>('Business re-investment');
   const [withdrawalNotes, setWithdrawalNotes] = useState<string>('');
+
+  // Auto-update tax when subtotal changes
+  React.useEffect(() => {
+    if (!initial) {
+      // Only auto-calculate for new purchases
+      const newAutoTax = Math.round(subtotal * (taxRate / 100) * 100) / 100; // Round to 2 decimal places
+      setTax(newAutoTax);
+    }
+  }, [subtotal, taxRate, initial]);
 
   function calcSubtotal(ls: PurchaseLine[]) {
     return ls.reduce((acc, l) => acc + l.quantity * l.unitCost, 0);
@@ -197,20 +208,16 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
           const costPre = l.unitCost;
           const costPost = l.unitCostPostShipping ?? l.unitCost;
           const autoMin = Math.ceil(costPost + 5);
-          const avgComp =
-            it.competitorAPrice && it.competitorBPrice
-              ? (it.competitorAPrice + it.competitorBPrice) / 2
-              : it.maxPrice;
-          const nextMax = it.maxPrice ?? avgComp ?? Math.ceil(costPost + 10);
-          const nextMinRev = (autoMin ?? 0) - costPost;
-          const nextMaxRev = (nextMax ?? 0) - costPost;
+          const autoMax = Math.ceil(costPost + 10);
+          const nextMinRev = autoMin - costPost;
+          const nextMaxRev = autoMax - costPost;
           return {
             ...it,
             stock: nextStock,
             costPreShipping: costPre,
             costPostShipping: costPost,
             minPrice: autoMin,
-            maxPrice: nextMax,
+            maxPrice: autoMax,
             minRevenue: nextMinRev,
             maxRevenue: nextMaxRev,
             updatedAt: nowIso(),
@@ -293,7 +300,21 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
                       setAddItemForLineId(l.id);
                       setShowAddItem(true);
                     } else {
-                      setLines(lines.map(x => (x.id === l.id ? { ...x, itemId: v } : x)));
+                      const newLines = lines.map(x => (x.id === l.id ? { ...x, itemId: v } : x));
+                      setLines(newLines);
+
+                      // Update weight when item changes (if items have weights)
+                      const newWeight = newLines.reduce((acc, line) => {
+                        const item = items.find(item => item.id === line.itemId);
+                        const itemWeight = item?.weightLbs ?? 0;
+                        const lineUnits =
+                          line.quantity + (line.hasSubItems ? (line.subItemsQty ?? 0) : 0);
+                        return acc + itemWeight * lineUnits;
+                      }, 0);
+                      if (newWeight > 0) {
+                        setWeight(Math.max(1, Math.ceil(newWeight)));
+                        setShipIntl(Math.max(1, Math.ceil(newWeight)) * weightCost);
+                      }
                     }
                   }}
                   data-testid="item-select"
@@ -319,14 +340,31 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
               <label>Quantity</label>
               <input
                 type="number"
-                value={l.quantity}
-                onChange={e =>
-                  setLines(
-                    lines.map(x =>
-                      x.id === l.id ? { ...x, quantity: parseNumber(e.target.value) } : x
-                    )
-                  )
-                }
+                value={l.quantity === 0 ? '' : l.quantity}
+                onChange={e => {
+                  const value = e.target.value;
+                  const newLines = lines.map(x =>
+                    x.id === l.id ? { ...x, quantity: value === '' ? 0 : parseNumber(value) } : x
+                  );
+                  setLines(newLines);
+
+                  // Update subtotal when quantity changes
+                  const newSubtotal = calcSubtotal(newLines);
+                  setSubtotal(newSubtotal);
+
+                  // Update weight when quantity changes (if items have weights)
+                  const newWeight = newLines.reduce((acc, line) => {
+                    const item = items.find(item => item.id === line.itemId);
+                    const itemWeight = item?.weightLbs ?? 0;
+                    const lineUnits =
+                      line.quantity + (line.hasSubItems ? (line.subItemsQty ?? 0) : 0);
+                    return acc + itemWeight * lineUnits;
+                  }, 0);
+                  if (newWeight > 0) {
+                    setWeight(Math.max(1, Math.ceil(newWeight)));
+                    setShipIntl(Math.max(1, Math.ceil(newWeight)) * weightCost);
+                  }
+                }}
                 data-testid="quantity-input"
               />
             </div>
@@ -336,12 +374,14 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
                 type="number"
                 step="0.01"
                 inputMode="decimal"
-                value={l.unitCost}
+                value={l.unitCost === 0 ? '' : l.unitCost}
                 onChange={e => {
-                  const v = parseNumber(e.target.value);
+                  const value = e.target.value;
+                  const v = value === '' ? 0 : parseNumber(value);
                   const next = lines.map(x => (x.id === l.id ? { ...x, unitCost: v } : x));
                   setLines(next);
-                  setSubtotal(calcSubtotal(next));
+                  const newSubtotal = calcSubtotal(next);
+                  setSubtotal(newSubtotal);
                 }}
                 data-testid="unit-cost-input"
               />
@@ -363,14 +403,29 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
               {l.hasSubItems && (
                 <input
                   placeholder="Sub-items qty"
-                  value={l.subItemsQty ?? 0}
-                  onChange={e =>
-                    setLines(
-                      lines.map(x =>
-                        x.id === l.id ? { ...x, subItemsQty: parseNumber(e.target.value) } : x
-                      )
-                    )
-                  }
+                  value={(l.subItemsQty ?? 0) === 0 ? '' : (l.subItemsQty ?? 0)}
+                  onChange={e => {
+                    const value = e.target.value;
+                    const newLines = lines.map(x =>
+                      x.id === l.id
+                        ? { ...x, subItemsQty: value === '' ? 0 : parseNumber(value) }
+                        : x
+                    );
+                    setLines(newLines);
+
+                    // Update weight when sub-items quantity changes (if items have weights)
+                    const newWeight = newLines.reduce((acc, line) => {
+                      const item = items.find(item => item.id === line.itemId);
+                      const itemWeight = item?.weightLbs ?? 0;
+                      const lineUnits =
+                        line.quantity + (line.hasSubItems ? (line.subItemsQty ?? 0) : 0);
+                      return acc + itemWeight * lineUnits;
+                    }, 0);
+                    if (newWeight > 0) {
+                      setWeight(Math.max(1, Math.ceil(newWeight)));
+                      setShipIntl(Math.max(1, Math.ceil(newWeight)) * weightCost);
+                    }
+                  }}
                   data-testid="sub-items-quantity-input"
                 />
               )}
@@ -423,8 +478,11 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
             type="number"
             step="0.01"
             inputMode="decimal"
-            value={subtotal}
-            onChange={e => setSubtotal(parseNumber(e.target.value))}
+            value={subtotal === 0 ? '' : subtotal}
+            onChange={e => {
+              const value = e.target.value;
+              setSubtotal(value === '' ? 0 : parseNumber(value));
+            }}
             data-testid="subtotal-input"
           />
         </div>
@@ -434,10 +492,14 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
             type="number"
             step="0.01"
             inputMode="decimal"
-            value={tax}
-            onChange={e => setTax(parseNumber(e.target.value))}
+            value={tax === 0 ? '' : tax.toFixed(2)}
+            onChange={e => {
+              const value = e.target.value;
+              setTax(value === '' ? 0 : parseNumber(value));
+            }}
             data-testid="tax-input"
           />
+          <div className="muted tiny">Auto: {taxRate}% of subtotal</div>
         </div>
         <div>
           <label>Shipping (US)</label>
@@ -445,8 +507,11 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
             type="number"
             step="0.01"
             inputMode="decimal"
-            value={shipUS}
-            onChange={e => setShipUS(parseNumber(e.target.value))}
+            value={shipUS === 0 ? '' : shipUS}
+            onChange={e => {
+              const value = e.target.value;
+              setShipUS(value === '' ? 0 : parseNumber(value));
+            }}
             data-testid="shipping-us-input"
           />
         </div>
@@ -454,11 +519,13 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
           <label>Weight (lbs)</label>
           <input
             type="number"
-            step="0.01"
-            inputMode="decimal"
+            step="1"
+            min="1"
+            inputMode="numeric"
             value={weight}
             onChange={e => {
-              const v = parseNumber(e.target.value);
+              const value = e.target.value;
+              const v = value === '' ? 1 : Math.max(1, Math.floor(parseNumber(value))); // Force integer, min 1
               setWeight(v);
               setShipIntl(v * (db.settings?.weightCostPerLb ?? DEFAULT_SETTINGS.weightCostPerLb));
             }}
@@ -469,10 +536,13 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
           <label>Shipping (International)</label>
           <input
             type="number"
-            step="0.01"
+            step="0.50"
             inputMode="decimal"
-            value={shipIntl}
-            onChange={e => setShipIntl(parseNumber(e.target.value))}
+            value={shipIntl === 0 ? '' : shipIntl}
+            onChange={e => {
+              const value = e.target.value;
+              setShipIntl(value === '' ? 0 : parseNumber(value));
+            }}
             data-testid="shipping-intl-input"
           />
           <div className="muted tiny">
