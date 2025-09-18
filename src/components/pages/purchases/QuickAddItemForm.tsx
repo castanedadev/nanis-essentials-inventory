@@ -20,6 +20,7 @@ export function QuickAddItemForm({ onSave, onCancel }: QuickAddItemFormProps) {
   const [name, setName] = useState('');
   const [category, setCategory] = useState<Category>('Other');
   const [description, setDescription] = useState('');
+  const [weightLbs, setWeightLbs] = useState<number>(0);
 
   const save = () => {
     if (!name.trim()) {
@@ -33,6 +34,7 @@ export function QuickAddItemForm({ onSave, onCancel }: QuickAddItemFormProps) {
       category,
       description: description.trim() || undefined,
       stock: 0, // Will be set by the purchase
+      weightLbs: weightLbs || undefined,
       images: [], // No images for quick add
       primaryImageId: undefined,
       costPreShipping: 0, // Will be set by the purchase
@@ -80,7 +82,19 @@ export function QuickAddItemForm({ onSave, onCancel }: QuickAddItemFormProps) {
             ))}
           </select>
         </div>
-        <div className="col-span-2">
+        <div>
+          <label>Weight (lbs per unit)</label>
+          <input
+            type="number"
+            step="0.01"
+            inputMode="decimal"
+            value={weightLbs}
+            onChange={e => setWeightLbs(parseFloat(e.target.value) || 0)}
+            placeholder="0.0"
+            data-testid="quick-add-weight-input"
+          />
+        </div>
+        <div>
           <label>Description (optional)</label>
           <input
             value={description}

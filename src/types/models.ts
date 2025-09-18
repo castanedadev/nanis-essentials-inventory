@@ -28,6 +28,8 @@ export interface InventoryItem {
   notes?: string;
   category: Category;
   stock: number;
+  // Physical properties
+  weightLbs?: number; // Weight per unit in pounds
   // Image support
   images: ItemImage[]; // Array of product images
   primaryImageId?: string; // Main display image

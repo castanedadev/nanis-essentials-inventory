@@ -44,7 +44,7 @@ export function SearchFilters({
 
         <SortSelect
           value={sortBy}
-          onChange={e => onSortChange(e.target.value)}
+          onChange={e => onSortChange(e.target.value || '')}
           options={sortOptions}
           data-testid={`${testId}-sort`}
         />

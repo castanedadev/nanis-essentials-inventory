@@ -25,6 +25,7 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
   const [description, setDescription] = useState(initial?.description ?? '');
   const [notes, setNotes] = useState(initial?.notes ?? '');
   const [stock, setStock] = useState<number>(initial?.stock ?? 0);
+  const [weightLbs, setWeightLbs] = useState<number>(initial?.weightLbs ?? 0);
   const [costPostShipping, setCostPostShipping] = useState<number>(initial?.costPostShipping ?? 0);
   const [costPreShipping, setCostPreShipping] = useState<number>(initial?.costPreShipping ?? 0);
   const [compA, setCompA] = useState<number | undefined>(initial?.competitorAPrice);
@@ -66,6 +67,7 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
       description: description.trim() || undefined,
       notes: notes.trim() || undefined,
       stock,
+      weightLbs: weightLbs || undefined,
       images,
       primaryImageId,
       costPreShipping: costPreShipping || undefined,
@@ -124,6 +126,17 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
             value={stock}
             onChange={e => setStock(parseNumber(e.target.value))}
             data-testid="item-stock-input"
+          />
+        </div>
+        <div>
+          <label>Weight (lbs per unit)</label>
+          <input
+            type="number"
+            step="0.01"
+            inputMode="decimal"
+            value={weightLbs}
+            onChange={e => setWeightLbs(parseNumber(e.target.value))}
+            data-testid="item-weight-input"
           />
         </div>
         <div>
