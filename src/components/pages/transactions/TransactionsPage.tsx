@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { DB, Transaction } from '../../../types/models';
-import { fmtUSD } from '../../../lib/utils';
+import { fmtUSD, isCurrentMonth, isPreviousMonth } from '../../../lib/utils';
 import { RevenueService } from '../../../lib/revenueService';
 import { TransactionForm } from './TransactionForm';
+import { DateFilters, DateFilterOption } from '../../molecules/DateFilters';
 import { RevenueWithdrawals } from '../../RevenueWithdrawals';
 
 interface TransactionsPageProps {
@@ -13,11 +14,38 @@ interface TransactionsPageProps {
 export function TransactionsPage({ db, persist }: TransactionsPageProps) {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Transaction | null>(null);
+  const [dateFilter, setDateFilter] = useState<DateFilterOption>('current-month');
 
   const onDelete = (id: string) => {
     if (!window.confirm('Delete transaction?')) return;
     persist({ ...db, transactions: db.transactions.filter(x => x.id !== id) });
   };
+
+  // Filter transactions based on selected date range
+  const filteredTransactions = useMemo(() => {
+    switch (dateFilter) {
+      case 'current-month':
+        return db.transactions.filter(t => isCurrentMonth(t.createdAt));
+      case 'previous-month':
+        return db.transactions.filter(t => isPreviousMonth(t.createdAt));
+      case 'overall':
+      default:
+        return db.transactions;
+    }
+  }, [db.transactions, dateFilter]);
+
+  // Filter revenue withdrawals based on selected date range
+  const filteredWithdrawals = useMemo(() => {
+    switch (dateFilter) {
+      case 'current-month':
+        return db.revenueWithdrawals.filter(w => isCurrentMonth(w.withdrawnAt));
+      case 'previous-month':
+        return db.revenueWithdrawals.filter(w => isPreviousMonth(w.withdrawnAt));
+      case 'overall':
+      default:
+        return db.revenueWithdrawals;
+    }
+  }, [db.revenueWithdrawals, dateFilter]);
 
   const handleSave = (transaction: Transaction) => {
     const exists = db.transactions.find(t => t.id === transaction.id);
@@ -48,11 +76,11 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
     setEditing(null);
   };
 
-  const totalExpenses = db.transactions
+  const totalExpenses = filteredTransactions
     .filter(t => t.type === 'expense')
     .reduce((sum, t) => sum + t.amount, 0);
 
-  const totalFees = db.transactions
+  const totalFees = filteredTransactions
     .filter(t => t.type === 'fee')
     .reduce((sum, t) => sum + t.amount, 0);
 
@@ -73,6 +101,8 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
         </button>
       </div>
 
+      <DateFilters activeFilter={dateFilter} onFilterChange={setDateFilter} />
+
       <div className="summary-cards">
         <div className="summary-card">
           <h3>Total Expenses</h3>
@@ -92,7 +122,7 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
       </div>
 
       <div className="cards two-cols" data-testid="transaction-cards">
-        {db.transactions
+        {filteredTransactions
           .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
           .map(t => (
             <div key={t.id} className="card" data-testid="transaction-card">
@@ -150,13 +180,21 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
               </div>
             </div>
           ))}
-        {db.transactions.length === 0 && (
+        {filteredTransactions.length === 0 && (
           <div className="empty">
-            No transactions yet. Add business expenses, packaging costs, fees, and other
-            non-inventory expenses.
+            {dateFilter === 'overall'
+              ? 'No transactions yet. Add business expenses, packaging costs, fees, and other non-inventory expenses.'
+              : `No transactions found for ${dateFilter === 'current-month' ? 'current month' : 'previous month'}.`}
           </div>
         )}
       </div>
+
+      {/* Revenue Withdrawals Section */}
+      {filteredWithdrawals.length > 0 && (
+        <div className="section">
+          <RevenueWithdrawals db={{ ...db, revenueWithdrawals: filteredWithdrawals }} />
+        </div>
+      )}
 
       {showForm && (
         <TransactionForm
