@@ -2514,3 +2514,71 @@ input::placeholder {
   color: #0369a1;
   font-weight: 500;
 }
+
+/* Weekly Sales Summary */
+.weekly-summary-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.weekly-summary-item {
+  background: #f8fafc;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 12px;
+  transition: all 0.2s ease;
+}
+
+.weekly-summary-item:hover {
+  background: #f1f5f9;
+  border-color: var(--primary);
+}
+
+.week-range {
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.week-stats {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.week-stats .stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.week-stats .stat-label {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+
+.week-stats .stat-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+@media (max-width: 768px) {
+  .week-stats {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .week-stats .stat {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}

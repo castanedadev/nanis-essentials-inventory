@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { AnalyticsItemCard, AnalyticsSimpleCard, AnalyticsPaymentCard } from './AnalyticsCard';
 import { ChannelPerformanceCard } from './ChannelPerformanceCard';
+import { WeeklySalesSummary } from './WeeklySalesSummary';
+import { WeeklyItemSalesSummary } from './WeeklyItemSalesSummary';
 import { RevenueWithdrawals } from '../../RevenueWithdrawals';
 import { DateFilters, DateFilterOption } from '../../molecules/DateFilters';
 import { DB } from '../../../types/models';
@@ -182,6 +184,16 @@ export function AnalyticsPage({ db }: AnalyticsPageProps) {
             />
           )}
         </div>
+      </div>
+
+      {/* Weekly Sales Summary Section */}
+      <div className="section">
+        <WeeklySalesSummary filteredSales={filteredSales} dateFilter={dateFilter} />
+      </div>
+
+      {/* Weekly Items Sales Summary Section */}
+      <div className="section">
+        <WeeklyItemSalesSummary filteredSales={filteredSales} dateFilter={dateFilter} />
       </div>
 
       {/* Channel Performance Section */}
