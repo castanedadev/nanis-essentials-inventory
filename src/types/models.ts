@@ -106,6 +106,7 @@ export interface Sale {
 
 export interface Settings {
   weightCostPerLb: number; // default 7.00, editable in code or via settings
+  taxRatePercent: number; // default 8.775%, editable in code or via settings
   encryptionEnabled?: boolean; // placeholder for future
 }
 
@@ -146,4 +147,5 @@ export interface Transaction {
 
 export const DEFAULT_SETTINGS: Settings = {
   weightCostPerLb: 7.0,
+  taxRatePercent: 8.775,
 };
