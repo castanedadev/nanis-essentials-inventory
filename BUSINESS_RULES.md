@@ -2,8 +2,8 @@
 
 ## Pricing
 
-- Min Price = costPostShipping + $5
-- Max Price = costPostShipping + $10
+- Min Price = costPostShipping + 20%
+- Max Price = costPostShipping + 30%
 - Rounding: values with decimal < .50 → floor; ≥ .50 → ceil
 - Auto-update prices when costPostShipping changes; user can override
 

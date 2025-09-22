@@ -133,8 +133,8 @@ export function InventoryPage({ db, persist }: InventoryPageProps) {
         if (itemIndex !== -1) {
           const costPre = l.unitCost;
           const costPost = l.unitCostPostShipping ?? l.unitCost;
-          const autoMin = Math.ceil(costPost + 5);
-          const autoMax = Math.ceil(costPost + 10);
+          const autoMin = Math.ceil(costPost * 1.2);
+          const autoMax = Math.ceil(costPost * 1.3);
 
           updatedItems[itemIndex] = {
             ...updatedItems[itemIndex],
