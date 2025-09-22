@@ -39,8 +39,8 @@ export function QuickAddItemForm({ onSave, onCancel }: QuickAddItemFormProps) {
       primaryImageId: undefined,
       costPreShipping: 0, // Will be set by the purchase
       costPostShipping: 0, // Will be set by the purchase
-      minPrice: 5, // Cost + $5 (will be updated when cost is set)
-      maxPrice: 10, // Cost + $10 (will be updated when cost is set)
+      minPrice: 5, // Cost + 20% (will be updated when cost is set)
+      maxPrice: 10, // Cost + 30% (will be updated when cost is set)
       minRevenue: 0,
       maxRevenue: 0,
       createdAt: nowIso(),
