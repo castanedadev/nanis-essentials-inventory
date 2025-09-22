@@ -30,3 +30,33 @@ export const isPreviousMonth = (iso: string) => {
   const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   return d.getMonth() === prevMonth.getMonth() && d.getFullYear() === prevMonth.getFullYear();
 };
+
+export const getStartOfWeek = (date = new Date()) => {
+  const d = new Date(date);
+  const day = d.getDay();
+  // Calculate the difference in milliseconds to get to Sunday
+  const diff = day * 24 * 60 * 60 * 1000;
+  return new Date(d.getTime() - diff);
+};
+
+export const getWeeksInRange = (startDate: Date, endDate: Date) => {
+  const weeks = [];
+  const current = getStartOfWeek(startDate);
+
+  while (current <= endDate) {
+    const weekEnd = new Date(current);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    weeks.push({
+      start: new Date(current),
+      end: new Date(Math.min(weekEnd.getTime(), endDate.getTime())),
+    });
+    current.setDate(current.getDate() + 7);
+  }
+
+  return weeks;
+};
+
+export const isDateInWeek = (iso: string, weekStart: Date, weekEnd: Date) => {
+  const date = new Date(iso);
+  return date >= weekStart && date <= weekEnd;
+};
