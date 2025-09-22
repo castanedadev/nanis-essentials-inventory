@@ -36,6 +36,11 @@ export function WeeklySalesSummary({ filteredSales, dateFilter }: WeeklySalesSum
 
       const totalSales = weekSales.reduce((acc, sale) => acc + sale.totalAmount, 0);
       const salesCount = weekSales.length;
+      const totalItems = weekSales.reduce(
+        (acc, sale) =>
+          acc + sale.lines.reduce((lineAcc: number, line: any) => lineAcc + line.quantity, 0),
+        0
+      );
       const averageSale = salesCount > 0 ? totalSales / salesCount : 0;
 
       return {
@@ -43,16 +48,22 @@ export function WeeklySalesSummary({ filteredSales, dateFilter }: WeeklySalesSum
         weekEnd: week.end,
         totalSales,
         salesCount,
+        totalItems,
         averageSale,
       };
     });
 
-    // For month views, show all weeks including those with zero sales
+    const now = new Date();
+
+    // Filter out future weeks (weeks that haven't started yet)
+    const filteredWeeklyData = weeklyData.filter(week => week.weekStart <= now);
+
+    // For month views, show weeks including those with zero sales (but not future weeks)
     // For overall view, only show weeks with sales
     if (dateFilter === 'overall') {
-      return weeklyData.filter(week => week.salesCount > 0);
+      return filteredWeeklyData.filter(week => week.salesCount > 0);
     }
-    return weeklyData;
+    return filteredWeeklyData;
   }, [filteredSales, dateFilter]);
 
   const formatWeekRange = (start: Date, end: Date) => {
@@ -78,20 +89,28 @@ export function WeeklySalesSummary({ filteredSales, dateFilter }: WeeklySalesSum
         {weeklySummary.map((week, index) => (
           <div key={index} className="weekly-summary-item">
             <div className="week-range">{formatWeekRange(week.weekStart, week.weekEnd)}</div>
-            <div className="week-stats">
-              <div className="stat">
-                <span className="stat-label">Sales:</span>
-                <span className="stat-value">{week.salesCount}</span>
+            {week.salesCount === 0 ? (
+              <div className="text-gray-500">No sales data for this week.</div>
+            ) : (
+              <div className="week-stats">
+                <div className="stat">
+                  <span className="stat-label">Sales:</span>
+                  <span className="stat-value">{week.salesCount}</span>
+                </div>
+                <div className="stat">
+                  <span className="stat-label">Items:</span>
+                  <span className="stat-value">{week.totalItems}</span>
+                </div>
+                <div className="stat">
+                  <span className="stat-label">Total:</span>
+                  <span className="stat-value green">{fmtUSD(week.totalSales)}</span>
+                </div>
+                <div className="stat">
+                  <span className="stat-label">Avg:</span>
+                  <span className="stat-value">{fmtUSD(week.averageSale)}</span>
+                </div>
               </div>
-              <div className="stat">
-                <span className="stat-label">Total:</span>
-                <span className="stat-value green">{fmtUSD(week.totalSales)}</span>
-              </div>
-              <div className="stat">
-                <span className="stat-label">Avg:</span>
-                <span className="stat-value">{fmtUSD(week.averageSale)}</span>
-              </div>
-            </div>
+            )}
           </div>
         ))}
       </div>

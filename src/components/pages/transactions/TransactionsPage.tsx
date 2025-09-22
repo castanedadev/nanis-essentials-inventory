@@ -3,6 +3,7 @@ import { DB, Transaction } from '../../../types/models';
 import { fmtUSD } from '../../../lib/utils';
 import { RevenueService } from '../../../lib/revenueService';
 import { TransactionForm } from './TransactionForm';
+import { RevenueWithdrawals } from '../../RevenueWithdrawals';
 
 interface TransactionsPageProps {
   db: DB;
@@ -168,6 +169,10 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
           db={db}
         />
       )}
+
+      <div className="revenue-withdrawals-section">
+        <RevenueWithdrawals db={db} />
+      </div>
     </div>
   );
 }
