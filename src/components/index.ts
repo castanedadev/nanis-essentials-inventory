@@ -23,7 +23,6 @@ export { ImportExportPage } from './pages/import-export';
 // Legacy components (to be gradually migrated)
 export { ItemCardImage } from './ItemImageDisplay';
 export { RevenueManager, RevenueSummaryCard } from './RevenueManager';
-export { RevenueWithdrawals } from './RevenueWithdrawals';
 
 // Layout Components (deprecated - use organisms/NavigationBar)
 export { TopBar } from './layout/TopBar';

@@ -207,6 +207,10 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
           db={db}
         />
       )}
+
+      <div className="revenue-withdrawals-section">
+        <RevenueWithdrawals db={db} />
+      </div>
     </div>
   );
 }

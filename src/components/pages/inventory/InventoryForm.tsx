@@ -34,12 +34,12 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
   const [primaryImageId, setPrimaryImageId] = useState<string | undefined>(initial?.primaryImageId);
 
   const autoMin = useMemo(() => {
-    const raw = (costPostShipping || 0) + 5;
+    const raw = (costPostShipping || 0) * 1.2;
     return Math.ceil(raw);
   }, [costPostShipping]);
 
   const autoMax = useMemo(() => {
-    const raw = (costPostShipping || 0) + 10;
+    const raw = (costPostShipping || 0) * 1.3;
     return Math.ceil(raw);
   }, [costPostShipping]);
 
@@ -164,7 +164,7 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
 
         <div>
           <label>
-            Min Price <span className="formula-hint">(Cost + $5.00)</span>
+            Min Price <span className="formula-hint">(Cost + 20%)</span>
           </label>
           <input
             type="number"
@@ -177,7 +177,7 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
         </div>
         <div>
           <label>
-            Max Price <span className="formula-hint">(Cost + $10.00)</span>
+            Max Price <span className="formula-hint">(Cost + 30%)</span>
           </label>
           <input
             type="number"
