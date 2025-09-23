@@ -190,11 +190,9 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
       </div>
 
       {/* Revenue Withdrawals Section */}
-      {filteredWithdrawals.length > 0 && (
-        <div className="section">
-          <RevenueWithdrawals db={{ ...db, revenueWithdrawals: filteredWithdrawals }} />
-        </div>
-      )}
+      <div className="revenue-withdrawals-section">
+        <RevenueWithdrawals db={{ ...db, revenueWithdrawals: filteredWithdrawals }} />
+      </div>
 
       {showForm && (
         <TransactionForm
@@ -207,10 +205,6 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
           db={db}
         />
       )}
-
-      <div className="revenue-withdrawals-section">
-        <RevenueWithdrawals db={db} />
-      </div>
     </div>
   );
 }
