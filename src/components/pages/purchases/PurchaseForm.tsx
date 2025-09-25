@@ -154,15 +154,15 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
       const lineUnits = l.quantity + (l.hasSubItems ? (l.subItemsQty ?? 0) : 0);
       const lineWeight = itemWeight * lineUnits;
 
-      // Proportional tax distribution based on unit cost
-      const lineCost = l.quantity * l.unitCost;
-      const perUnitTax = subtotal > 0 ? (tax * lineCost) / (subtotal * l.quantity) : 0;
+      // Proportional tax distribution based on item price using taxRatePercent
+      const perUnitTax = l.unitCost * (taxRate / 100);
 
       // Equal distribution for US shipping
       const perUnitShippingUS = shipUS > 0 && units ? shipUS / units : 0;
 
-      // Weight-based distribution for international shipping
+      // Weight-based distribution for international shipping (accounts for rounding)
       const weightRatio = totalWeight > 0 ? lineWeight / totalWeight : 0;
+      // Use actual shipIntl (already rounded) instead of calculated exact amount
       const perUnitShippingIntl = lineUnits > 0 ? (shipIntl * weightRatio) / lineUnits : 0;
 
       return {
