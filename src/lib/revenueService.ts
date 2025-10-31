@@ -30,12 +30,23 @@ export class RevenueService {
   }
 
   /**
+   * Calculate total income from income transactions
+   */
+  static calculateTotalIncome(db: DB): number {
+    return db.transactions
+      .filter(t => t.type === 'income')
+      .reduce((total, transaction) => total + transaction.amount, 0);
+  }
+
+  /**
    * Calculate available revenue for re-investment
+   * Includes income transactions which add to available funds
    */
   static calculateAvailableRevenue(db: DB): number {
     const totalRevenue = this.calculateTotalRevenue(db);
+    const totalIncome = this.calculateTotalIncome(db);
     const totalWithdrawn = this.calculateTotalWithdrawn(db);
-    return Math.max(0, totalRevenue - totalWithdrawn);
+    return Math.max(0, totalRevenue + totalIncome - totalWithdrawn);
   }
 
   /**
@@ -157,6 +168,7 @@ export class RevenueService {
 
   /**
    * Process a transaction that uses revenue as payment source
+   * Income transactions don't require withdrawal - they add to revenue
    */
   static processTransactionWithRevenue(
     db: DB,
@@ -168,7 +180,15 @@ export class RevenueService {
   } {
     const withdrawals: RevenueWithdrawal[] = [];
 
-    // Calculate revenue amounts to withdraw
+    // Income transactions add to revenue and don't need withdrawals
+    if (transaction.type === 'income') {
+      return {
+        updatedDb: db,
+        withdrawals: [],
+      };
+    }
+
+    // Calculate revenue amounts to withdraw (for expenses/fees only)
     let revenueToWithdraw = 0;
 
     if (transaction.paymentSource === 'revenue') {

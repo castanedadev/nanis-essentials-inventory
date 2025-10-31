@@ -10,7 +10,14 @@ interface IncomeStatementPageProps {
 
 export function IncomeStatementPage({ db }: IncomeStatementPageProps) {
   // Calculate revenue from sales
-  const totalRevenue = db.sales.reduce((sum, sale) => sum + sale.totalAmount, 0);
+  const totalSalesRevenue = db.sales.reduce((sum, sale) => sum + sale.totalAmount, 0);
+
+  // Calculate additional income from income transactions
+  const totalIncome = db.transactions
+    .filter(t => t.type === 'income')
+    .reduce((sum, transaction) => sum + transaction.amount, 0);
+
+  const totalRevenue = totalSalesRevenue + totalIncome;
 
   // Calculate cost of goods sold from purchases
   const totalCOGS = db.purchases.reduce((sum, purchase) => sum + purchase.totalCost, 0);
@@ -39,8 +46,22 @@ export function IncomeStatementPage({ db }: IncomeStatementPageProps) {
         <div className="statement-section">
           <div className="section-header">Revenue</div>
           <div className="line-item">
-            <span>Total Sales Revenue</span>
-            <span className="amount positive">{fmtUSD(totalRevenue)}</span>
+            <span>Sales Revenue</span>
+            <span className="amount positive">{fmtUSD(totalSalesRevenue)}</span>
+          </div>
+          {totalIncome > 0 && (
+            <div className="line-item">
+              <span>Other Income</span>
+              <span className="amount positive">{fmtUSD(totalIncome)}</span>
+            </div>
+          )}
+          <div className="line-item total">
+            <span>
+              <strong>Total Revenue</strong>
+            </span>
+            <span className="amount positive">
+              <strong>{fmtUSD(totalRevenue)}</strong>
+            </span>
           </div>
         </div>
 

@@ -2651,6 +2651,12 @@ input::placeholder {
   border: 1px solid #fecaca;
 }
 
+.badge.income {
+  background: #d1fae5;
+  color: #059669;
+  border: 1px solid #6ee7b7;
+}
+
 .amount-large {
   font-size: 18px;
   font-weight: 700;

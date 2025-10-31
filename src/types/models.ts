@@ -128,7 +128,7 @@ export interface RevenueWithdrawal {
   notes?: string;
 }
 
-export type TransactionType = 'expense' | 'fee';
+export type TransactionType = 'expense' | 'fee' | 'income';
 
 export interface Transaction {
   id: string;
