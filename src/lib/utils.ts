@@ -31,6 +31,33 @@ export const isPreviousMonth = (iso: string) => {
   return d.getMonth() === prevMonth.getMonth() && d.getFullYear() === prevMonth.getFullYear();
 };
 
+export const isInMonthYear = (iso: string, month: number, year: number) => {
+  const d = new Date(iso);
+  return d.getMonth() === month && d.getFullYear() === year;
+};
+
+export const getUniqueMonthsFromSales = (sales: Array<{ createdAt: string }>) => {
+  const monthSet = new Set<string>();
+  sales.forEach(sale => {
+    const date = new Date(sale.createdAt);
+    const monthYear = `${date.getFullYear()}-${String(date.getMonth()).padStart(2, '0')}`;
+    monthSet.add(monthYear);
+  });
+  return Array.from(monthSet)
+    .map(monthYear => {
+      const [year, month] = monthYear.split('-');
+      return {
+        year: parseInt(year, 10),
+        month: parseInt(month, 10),
+        key: monthYear,
+      };
+    })
+    .sort((a, b) => {
+      if (a.year !== b.year) return b.year - a.year;
+      return b.month - a.month;
+    });
+};
+
 export const getStartOfWeek = (date = new Date()) => {
   const d = new Date(date);
   const day = d.getDay();

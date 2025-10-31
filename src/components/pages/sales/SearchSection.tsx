@@ -1,11 +1,15 @@
 import React from 'react';
 import { SearchInput } from '../../atoms/Input';
 import { Text } from '../../atoms/Typography';
+import { SortSelect } from '../../atoms/Select';
 import { fmtUSD } from '../../../lib/utils';
 
 interface SearchSectionProps {
   searchQuery: string;
   setSearchQuery: (_query: string) => void;
+  monthFilter: string | null;
+  setMonthFilter: (_filter: string | null) => void;
+  monthOptions: Array<{ value: string; label: string }>;
   summaryStats: {
     totalSales: number;
     totalAmount: number;
@@ -18,6 +22,9 @@ interface SearchSectionProps {
 export function SearchSection({
   searchQuery,
   setSearchQuery,
+  monthFilter,
+  setMonthFilter,
+  monthOptions,
   summaryStats,
   onExpandAll,
   onCollapseAll,
@@ -31,6 +38,12 @@ export function SearchSection({
           onChange={e => setSearchQuery(e.target.value)}
           onClear={() => setSearchQuery('')}
           showClearButton={!!searchQuery}
+        />
+        <SortSelect
+          options={monthOptions}
+          value={monthFilter || ''}
+          onChange={e => setMonthFilter(e.target.value || null)}
+          className="month-filter"
         />
         <div className="group-controls">
           <button onClick={onExpandAll}>Expand All</button>

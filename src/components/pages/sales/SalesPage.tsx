@@ -3,6 +3,7 @@ import { SaleForm } from './SaleForm';
 import { SearchSection } from './SearchSection';
 import { CustomerGroup, CustomerGroupType } from './CustomerGroup';
 import { DB, Sale, InventoryItem } from '../../../types/models';
+import { isInMonthYear, getUniqueMonthsFromSales } from '../../../lib/utils';
 // import { fmtUSD } from '../../../lib/utils';
 
 interface SalesPageProps {
@@ -14,6 +15,7 @@ export function SalesPage({ db, persist }: SalesPageProps) {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Sale | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [monthFilter, setMonthFilter] = useState<string | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   const onDelete = (id: string) => {
@@ -42,10 +44,43 @@ export function SalesPage({ db, persist }: SalesPageProps) {
     );
   }
 
+  function matchesMonthFilter(sale: Sale, filter: string | null): boolean {
+    if (!filter) return true;
+    const [year, month] = filter.split('-').map(Number);
+    return isInMonthYear(sale.createdAt, month, year);
+  }
+
+  // Generate month options from sales data
+  const monthOptions = useMemo(() => {
+    const uniqueMonths = getUniqueMonthsFromSales(db.sales);
+    const options = [{ value: '', label: 'All Months' }];
+    const monthNames = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    uniqueMonths.forEach(({ year, month, key }) => {
+      options.push({
+        value: key,
+        label: `${monthNames[month]} ${year}`,
+      });
+    });
+    return options;
+  }, [db.sales]);
+
   const groups: CustomerGroupType[] = useMemo(() => {
     const map = new Map<string, Sale[]>();
     db.sales
-      .filter(s => matchesSearch(s, searchQuery))
+      .filter(s => matchesSearch(s, searchQuery) && matchesMonthFilter(s, monthFilter))
       .forEach(s => {
         const name = s.buyerName?.trim() || 'Anonymous';
         if (!map.has(name)) map.set(name, []);
@@ -67,7 +102,7 @@ export function SalesPage({ db, persist }: SalesPageProps) {
       (a, b) => b.totalAmount - a.totalAmount || a.customerName.localeCompare(b.customerName)
     );
     return result;
-  }, [db.sales, searchQuery]);
+  }, [db.sales, searchQuery, monthFilter]);
 
   const summaryStats = useMemo(() => {
     const totalSales = groups.reduce((acc, g) => acc + g.salesCount, 0);
@@ -131,6 +166,9 @@ export function SalesPage({ db, persist }: SalesPageProps) {
       <SearchSection
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
+        monthFilter={monthFilter}
+        setMonthFilter={setMonthFilter}
+        monthOptions={monthOptions}
         summaryStats={summaryStats}
         onExpandAll={expandAll}
         onCollapseAll={collapseAll}
