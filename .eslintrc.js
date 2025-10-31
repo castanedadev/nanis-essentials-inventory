@@ -27,6 +27,8 @@ module.exports = {
     'react/jsx-uses-react': 'off',
     'react/react-in-jsx-scope': 'off',
     'react-hooks/exhaustive-deps': 'warn',
+    // Testing Library rules
+    'testing-library/prefer-screen-queries': 'off',
   },
   overrides: [
     {
