@@ -957,7 +957,9 @@ input::placeholder {
 
 /* Improve badges spacing inside stock value */
 .item-meta-row .value .last-item-badge,
-.item-meta-row .value .out-of-stock-badge {
+.item-meta-row .value .out-of-stock-badge,
+.item-meta-row .value .warning-badge,
+.item-meta-row .value .danger-badge {
   margin-left: 8px;
 }
 
@@ -993,32 +995,382 @@ input::placeholder {
 }
 
 /* Stock Status Badges */
-.last-item-badge {
-  display: inline-block;
+.last-item-badge,
+.warning-badge {
+  vertical-align: middle;
   margin-left: 8px;
-  padding: 2px 8px;
-  background: #fef2f2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
-  border-radius: 12px;
+  padding: 4px 10px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  border: 1px solid #fbbf24;
+  border-radius: 6px;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.025em;
+  letter-spacing: 0.05em;
+  box-shadow:
+    0 1px 2px rgba(217, 119, 6, 0.1),
+    0 0 0 1px rgba(251, 191, 36, 0.2) inset;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  line-height: 1.2;
 }
 
-.out-of-stock-badge {
-  display: inline-block;
+.out-of-stock-badge,
+.danger-badge {
+  vertical-align: middle;
   margin-left: 8px;
-  padding: 2px 8px;
-  background: #1f2937;
-  color: white;
-  border: 1px solid #374151;
+  padding: 4px 10px;
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #991b1b;
+  border: 1px solid #f87171;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow:
+    0 1px 2px rgba(220, 38, 38, 0.15),
+    0 0 0 1px rgba(248, 113, 113, 0.2) inset;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+/* Modern Item Card Redesign */
+.item-card-modern {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  background: var(--card);
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.item-card-modern::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary) 0%, var(--purple) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.item-card-modern:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-color: var(--primary-light);
+}
+
+.item-card-modern:hover::before {
+  opacity: 1;
+}
+
+/* Header Section */
+.item-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.item-card-title-wrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-card-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 4px 0;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.item-card-date {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.item-card-category-badge {
+  padding: 6px 12px;
+  background: linear-gradient(135deg, var(--primary-light) 0%, #fce7f3 100%);
+  color: var(--primary-dark);
+  border: 1px solid rgba(236, 72, 153, 0.2);
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(236, 72, 153, 0.1);
+}
+
+/* Content Section */
+.item-card-content {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.item-card-image-section {
+  flex-shrink: 0;
+  width: 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.item-card-image-wrapper {
+  width: 100%;
+}
+
+.item-card-image-wrapper .item-image,
+.item-card-image-wrapper .item-image-placeholder {
+  width: 140px;
+  height: 140px;
   border-radius: 12px;
+  border: 2px solid var(--border-light);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.item-card-modern:hover .item-card-image-wrapper .item-image,
+.item-card-modern:hover .item-card-image-wrapper .item-image-placeholder {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* Status Badges Below Image */
+.item-card-status-badges {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+}
+
+.item-card-status-badges .warning-badge,
+.item-card-status-badges .danger-badge {
+  margin: 0;
+  padding: 6px 12px;
+  font-size: 10px;
+  width: 100%;
+  text-align: center;
+  justify-content: center;
+}
+
+.item-card-details {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Pricing Section */
+.item-card-pricing {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 12px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 10px;
+  border: 1px solid var(--border-light);
+}
+
+.item-card-price-range,
+.item-card-unit-cost {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.item-card-label {
   font-size: 11px;
   font-weight: 600;
+  color: var(--muted);
   text-transform: uppercase;
-  letter-spacing: 0.025em;
+  letter-spacing: 0.5px;
+}
+
+.item-card-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.price-range-value {
+  color: var(--primary-dark);
+  font-size: 14px;
+}
+
+/* Potential Revenue Section */
+.item-card-revenue {
+  padding: 8px 12px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.item-card-revenue .item-card-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.item-card-revenue .revenue-value {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+/* Stock & Weight Section */
+.item-card-stock-weight {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 12px;
+  background: #fafbfc;
+  border-radius: 10px;
+  border: 1px solid var(--border-light);
+}
+
+.item-card-stock,
+.item-card-weight {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.item-card-stock-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.stock-number {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1;
+}
+
+.item-card-weight .item-card-value {
+  color: var(--blue);
+}
+
+/* Description */
+.item-card-description {
+  margin-top: 4px;
+  padding: 12px;
+  background: #f9fafb;
+  border-left: 3px solid var(--primary);
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.item-card-description .muted {
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* Actions */
+.item-card-actions {
+  display: flex;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-light);
+  margin-top: auto;
+}
+
+.item-card-actions button {
+  flex: 1;
+  padding: 10px 16px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+/* Out of Stock Styling for Modern Card */
+.out-of-stock-card.item-card-modern {
+  opacity: 0.75;
+}
+
+.out-of-stock-card.item-card-modern .item-card-title {
+  color: var(--muted);
+}
+
+.out-of-stock-card.item-card-modern .item-card-image-section .item-image {
+  filter: grayscale(100%) opacity(0.6);
+}
+
+.out-of-stock-card.item-card-modern .item-card-image-section .item-image-placeholder {
+  background: #e5e7eb;
+  color: #9ca3af;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .item-card-content {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .item-card-image-section {
+    width: 100%;
+    max-width: 200px;
+  }
+
+  .item-card-image-wrapper {
+    width: 100%;
+  }
+
+  .item-card-image-wrapper .item-image,
+  .item-card-image-wrapper .item-image-placeholder {
+    width: 100%;
+    height: 200px;
+  }
+
+  .item-card-pricing,
+  .item-card-stock-weight {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .item-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .item-card-category-badge {
+    align-self: flex-start;
+  }
 }
 
 /* Analytics Item Cards */
