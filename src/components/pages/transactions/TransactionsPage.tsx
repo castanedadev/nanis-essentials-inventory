@@ -52,7 +52,10 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
     let updatedDb = { ...db };
 
     // Process revenue deduction if payment source uses business revenue (not for income)
-    if (transaction.type !== 'income' && (transaction.paymentSource === 'revenue' || transaction.paymentSource === 'mixed')) {
+    if (
+      transaction.type !== 'income' &&
+      (transaction.paymentSource === 'revenue' || transaction.paymentSource === 'mixed')
+    ) {
       const { updatedDb: dbWithRevenue, error } = RevenueService.processTransactionWithRevenue(
         db,
         transaction
@@ -149,11 +152,7 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
               <div className="card-row">
                 <div
                   className="amount-large"
-                  style={
-                    t.type === 'income'
-                      ? { color: '#22c55e', fontWeight: 'bold' }
-                      : undefined
-                  }
+                  style={t.type === 'income' ? { color: '#22c55e', fontWeight: 'bold' } : undefined}
                 >
                   {t.type === 'income' ? '+' : ''}
                   {fmtUSD(t.amount)}
@@ -182,8 +181,8 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
                   </div>
                   {t.paymentSource === 'mixed' && t.revenueAmount && t.externalAmount && (
                     <div>
-                      <b>Breakdown:</b> {fmtUSD(t.revenueAmount)} revenue + {fmtUSD(t.externalAmount)}{' '}
-                      external
+                      <b>Breakdown:</b> {fmtUSD(t.revenueAmount)} revenue +{' '}
+                      {fmtUSD(t.externalAmount)} external
                     </div>
                   )}
                 </div>

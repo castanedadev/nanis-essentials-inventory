@@ -11,17 +11,17 @@ interface CashFlowPageProps {
 export function CashFlowPage({ db }: CashFlowPageProps) {
   // Cash from operating activities
   const salesCashInflow = db.sales.reduce((sum, sale) => sum + sale.totalAmount, 0);
-  
+
   // Income transactions are cash inflows
   const incomeCashInflow = db.transactions
     .filter(t => t.type === 'income')
     .reduce((sum, transaction) => sum + transaction.amount, 0);
-  
+
   // Expenses and fees are cash outflows
   const expensesCashOutflow = db.transactions
     .filter(t => t.type === 'expense' || t.type === 'fee')
     .reduce((sum, transaction) => sum + transaction.amount, 0);
-  
+
   const operatingCashFlow = salesCashInflow + incomeCashInflow - expensesCashOutflow;
 
   // Cash from investing activities (purchases of inventory)
