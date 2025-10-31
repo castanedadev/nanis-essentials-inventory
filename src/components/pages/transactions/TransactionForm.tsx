@@ -249,38 +249,38 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
             )}
 
             {isMixed && (
-          <div className="form-section mixed-sources-section">
-            <h4>Mixed Source Breakdown</h4>
-            <div className="form-row">
-              <label>
-                From Business Revenue ($)
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.revenueAmount}
-                  onChange={e => updateField('revenueAmount', e.target.value)}
-                  placeholder="0.00"
-                />
-              </label>
+              <div className="form-section mixed-sources-section">
+                <h4>Mixed Source Breakdown</h4>
+                <div className="form-row">
+                  <label>
+                    From Business Revenue ($)
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.revenueAmount}
+                      onChange={e => updateField('revenueAmount', e.target.value)}
+                      placeholder="0.00"
+                    />
+                  </label>
 
-              <label>
-                From External Funds ($)
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.externalAmount}
-                  onChange={e => updateField('externalAmount', e.target.value)}
-                  placeholder="0.00"
-                />
-              </label>
-            </div>
-            {errors.mixedAmounts && <div className="error">{errors.mixedAmounts}</div>}
-            <div className="mixed-hint">
-              Tip: When you enter one amount, the other will auto-calculate to match your total.
-            </div>
-          </div>
+                  <label>
+                    From External Funds ($)
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.externalAmount}
+                      onChange={e => updateField('externalAmount', e.target.value)}
+                      placeholder="0.00"
+                    />
+                  </label>
+                </div>
+                {errors.mixedAmounts && <div className="error">{errors.mixedAmounts}</div>}
+                <div className="mixed-hint">
+                  Tip: When you enter one amount, the other will auto-calculate to match your total.
+                </div>
+              </div>
             )}
           </>
         )}
@@ -288,7 +288,8 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
         {isIncome && (
           <div className="revenue-info">
             <div className="available-revenue">
-              <strong>Note:</strong> Income transactions will be added to your business revenue and increase your available funds.
+              <strong>Note:</strong> Income transactions will be added to your business revenue and
+              increase your available funds.
             </div>
           </div>
         )}
