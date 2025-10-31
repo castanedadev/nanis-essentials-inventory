@@ -51,8 +51,8 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
     const exists = db.transactions.find(t => t.id === transaction.id);
     let updatedDb = { ...db };
 
-    // Process revenue deduction if payment source uses business revenue
-    if (transaction.paymentSource === 'revenue' || transaction.paymentSource === 'mixed') {
+    // Process revenue deduction if payment source uses business revenue (not for income)
+    if (transaction.type !== 'income' && (transaction.paymentSource === 'revenue' || transaction.paymentSource === 'mixed')) {
       const { updatedDb: dbWithRevenue, error } = RevenueService.processTransactionWithRevenue(
         db,
         transaction
@@ -84,7 +84,12 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
     .filter(t => t.type === 'fee')
     .reduce((sum, t) => sum + t.amount, 0);
 
-  const totalTransactions = totalExpenses + totalFees;
+  const totalIncome = filteredTransactions
+    .filter(t => t.type === 'income')
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  const totalOutgoing = totalExpenses + totalFees;
+  const netTransactions = totalIncome - totalOutgoing;
 
   return (
     <div className="page">
@@ -115,9 +120,18 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
           <div className="muted">Platform fees, payment processing, etc.</div>
         </div>
         <div className="summary-card">
-          <h3>Total Outgoing</h3>
-          <div className="amount total">{fmtUSD(totalTransactions)}</div>
-          <div className="muted">All non-inventory business costs</div>
+          <h3>Total Income</h3>
+          <div className="amount" style={{ color: totalIncome > 0 ? '#22c55e' : undefined }}>
+            {fmtUSD(totalIncome)}
+          </div>
+          <div className="muted">Additional income and revenue</div>
+        </div>
+        <div className="summary-card">
+          <h3>Net Transactions</h3>
+          <div className={`amount total ${netTransactions >= 0 ? 'positive' : 'negative'}`}>
+            {fmtUSD(netTransactions)}
+          </div>
+          <div className="muted">Income minus expenses and fees</div>
         </div>
       </div>
 
@@ -133,33 +147,47 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
                 </div>
               </div>
               <div className="card-row">
-                <div className="amount-large">{fmtUSD(t.amount)}</div>
+                <div
+                  className="amount-large"
+                  style={
+                    t.type === 'income'
+                      ? { color: '#22c55e', fontWeight: 'bold' }
+                      : undefined
+                  }
+                >
+                  {t.type === 'income' ? '+' : ''}
+                  {fmtUSD(t.amount)}
+                </div>
                 <div className="muted">{new Date(t.createdAt).toLocaleDateString()}</div>
               </div>
               <div className="grid two">
                 <div>
                   <b>Category:</b> {t.category}
                 </div>
-                <div>
-                  <b>Payment:</b> {t.paymentMethod || 'Not specified'}
-                </div>
-              </div>
-              <div className="grid two">
-                <div>
-                  <b>Source:</b>{' '}
-                  {t.paymentSource === 'mixed'
-                    ? 'Mixed Sources'
-                    : t.paymentSource === 'revenue'
-                      ? 'Business Revenue'
-                      : 'External Funds'}
-                </div>
-                {t.paymentSource === 'mixed' && t.revenueAmount && t.externalAmount && (
+                {t.type !== 'income' && (
                   <div>
-                    <b>Breakdown:</b> {fmtUSD(t.revenueAmount)} revenue + {fmtUSD(t.externalAmount)}{' '}
-                    external
+                    <b>Payment:</b> {t.paymentMethod || 'Not specified'}
                   </div>
                 )}
               </div>
+              {t.type !== 'income' && (
+                <div className="grid two">
+                  <div>
+                    <b>Source:</b>{' '}
+                    {t.paymentSource === 'mixed'
+                      ? 'Mixed Sources'
+                      : t.paymentSource === 'revenue'
+                        ? 'Business Revenue'
+                        : 'External Funds'}
+                  </div>
+                  {t.paymentSource === 'mixed' && t.revenueAmount && t.externalAmount && (
+                    <div>
+                      <b>Breakdown:</b> {fmtUSD(t.revenueAmount)} revenue + {fmtUSD(t.externalAmount)}{' '}
+                      external
+                    </div>
+                  )}
+                </div>
+              )}
               {t.notes && (
                 <div className="notes">
                   <b>Notes:</b> {t.notes}
@@ -183,7 +211,7 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
         {filteredTransactions.length === 0 && (
           <div className="empty">
             {dateFilter === 'overall'
-              ? 'No transactions yet. Add business expenses, packaging costs, fees, and other non-inventory expenses.'
+              ? 'No transactions yet. Add business expenses, fees, income, and other transactions.'
               : `No transactions found for ${dateFilter === 'current-month' ? 'current month' : 'previous month'}.`}
           </div>
         )}

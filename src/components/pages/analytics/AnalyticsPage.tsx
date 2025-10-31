@@ -76,6 +76,10 @@ export function AnalyticsPage({ db }: AnalyticsPageProps) {
     .filter(t => t.type === 'fee')
     .reduce((acc, t) => acc + t.amount, 0);
 
+  const totalIncome = filteredTransactions
+    .filter(t => t.type === 'income')
+    .reduce((acc, t) => acc + t.amount, 0);
+
   // Payment method summaries
   const salesByMethod = filteredSales.reduce(
     (acc, s) => {
@@ -143,8 +147,14 @@ export function AnalyticsPage({ db }: AnalyticsPageProps) {
           />
 
           <AnalyticsSimpleCard
+            title="Total Income"
+            value={fmtUSD(totalIncome)}
+            testId="total-income-card"
+          />
+
+          <AnalyticsSimpleCard
             title="Net Profit"
-            value={fmtUSD(totalSales - totalExpenses - totalFees)}
+            value={fmtUSD(totalSales + totalIncome - totalExpenses - totalFees)}
             testId="net-profit-card"
           />
 

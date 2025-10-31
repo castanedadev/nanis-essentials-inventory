@@ -11,11 +11,18 @@ interface CashFlowPageProps {
 export function CashFlowPage({ db }: CashFlowPageProps) {
   // Cash from operating activities
   const salesCashInflow = db.sales.reduce((sum, sale) => sum + sale.totalAmount, 0);
-  const expensesCashOutflow = db.transactions.reduce(
-    (sum, transaction) => sum + transaction.amount,
-    0
-  );
-  const operatingCashFlow = salesCashInflow - expensesCashOutflow;
+  
+  // Income transactions are cash inflows
+  const incomeCashInflow = db.transactions
+    .filter(t => t.type === 'income')
+    .reduce((sum, transaction) => sum + transaction.amount, 0);
+  
+  // Expenses and fees are cash outflows
+  const expensesCashOutflow = db.transactions
+    .filter(t => t.type === 'expense' || t.type === 'fee')
+    .reduce((sum, transaction) => sum + transaction.amount, 0);
+  
+  const operatingCashFlow = salesCashInflow + incomeCashInflow - expensesCashOutflow;
 
   // Cash from investing activities (purchases of inventory)
   const inventoryPurchases = db.purchases.reduce((sum, purchase) => sum + purchase.totalCost, 0);
@@ -44,8 +51,14 @@ export function CashFlowPage({ db }: CashFlowPageProps) {
             <span>Cash receipts from sales</span>
             <span className="amount positive">{fmtUSD(salesCashInflow)}</span>
           </div>
+          {incomeCashInflow > 0 && (
+            <div className="line-item">
+              <span>Cash receipts from other income</span>
+              <span className="amount positive">{fmtUSD(incomeCashInflow)}</span>
+            </div>
+          )}
           <div className="line-item">
-            <span>Cash paid for expenses</span>
+            <span>Cash paid for expenses and fees</span>
             <span className="amount negative">({fmtUSD(expensesCashOutflow)})</span>
           </div>
           <div className="line-item total">

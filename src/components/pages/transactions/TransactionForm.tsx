@@ -43,6 +43,8 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
     externalAmount: initial?.externalAmount?.toString() || '',
   });
 
+  const isIncome = formData.type === 'income';
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const isMixed = formData.paymentSource === 'mixed';
   const availableRevenue = RevenueService.calculateAvailableRevenue(db);
@@ -62,16 +64,16 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
       newErrors.category = 'Category is required';
     }
 
-    // Revenue validation
-    if (formData.paymentSource === 'revenue') {
+    // Revenue validation (only for expenses/fees, not income)
+    if (!isIncome && formData.paymentSource === 'revenue') {
       const totalAmt = parseFloat(formData.amount) || 0;
       if (totalAmt > availableRevenue) {
         newErrors.amount = `Insufficient revenue. Available: ${fmtUSD(availableRevenue)}`;
       }
     }
 
-    // Mixed source validation
-    if (isMixed) {
+    // Mixed source validation (only for expenses/fees, not income)
+    if (!isIncome && isMixed) {
       const revenueAmt = parseFloat(formData.revenueAmount) || 0;
       const externalAmt = parseFloat(formData.externalAmount) || 0;
       const totalAmt = parseFloat(formData.amount) || 0;
@@ -102,13 +104,18 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
       category: formData.category.trim(),
       notes: formData.notes.trim() || undefined,
       createdAt: initial?.createdAt || new Date().toISOString(),
-      paymentMethod: formData.paymentMethod,
-      paymentSource: formData.paymentSource,
-      // Include mixed source breakdown only if mixed
-      ...(isMixed && {
-        revenueAmount: parseFloat(formData.revenueAmount),
-        externalAmount: parseFloat(formData.externalAmount),
-      }),
+      // Income transactions don't need payment info
+      ...(isIncome
+        ? {}
+        : {
+            paymentMethod: formData.paymentMethod,
+            paymentSource: formData.paymentSource,
+            // Include mixed source breakdown only if mixed
+            ...(isMixed && {
+              revenueAmount: parseFloat(formData.revenueAmount),
+              externalAmount: parseFloat(formData.externalAmount),
+            }),
+          }),
     };
 
     onSave(transaction);
@@ -153,6 +160,7 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
             >
               <option value="expense">Business Expense</option>
               <option value="fee">Fee Payment</option>
+              <option value="income">Income / Revenue</option>
             </select>
           </label>
         </div>
@@ -204,41 +212,43 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
           </label>
         </div>
 
-        <div className="form-row">
-          <label>
-            Payment Method
-            <select
-              value={formData.paymentMethod}
-              onChange={e => updateField('paymentMethod', e.target.value as PaymentMethod)}
-            >
-              <option value="cash">Cash</option>
-              <option value="transfer">Bank Transfer</option>
-              <option value="installments">Installments</option>
-            </select>
-          </label>
+        {!isIncome && (
+          <>
+            <div className="form-row">
+              <label>
+                Payment Method
+                <select
+                  value={formData.paymentMethod}
+                  onChange={e => updateField('paymentMethod', e.target.value as PaymentMethod)}
+                >
+                  <option value="cash">Cash</option>
+                  <option value="transfer">Bank Transfer</option>
+                  <option value="installments">Installments</option>
+                </select>
+              </label>
 
-          <label>
-            Payment Source
-            <select
-              value={formData.paymentSource}
-              onChange={e => updateField('paymentSource', e.target.value as PaymentSource)}
-            >
-              <option value="external">External Funds</option>
-              <option value="revenue">Business Revenue</option>
-              <option value="mixed">Mixed Sources</option>
-            </select>
-          </label>
-        </div>
-
-        {(formData.paymentSource === 'revenue' || formData.paymentSource === 'mixed') && (
-          <div className="revenue-info">
-            <div className="available-revenue">
-              <strong>Available Business Revenue: {fmtUSD(availableRevenue)}</strong>
+              <label>
+                Payment Source
+                <select
+                  value={formData.paymentSource}
+                  onChange={e => updateField('paymentSource', e.target.value as PaymentSource)}
+                >
+                  <option value="external">External Funds</option>
+                  <option value="revenue">Business Revenue</option>
+                  <option value="mixed">Mixed Sources</option>
+                </select>
+              </label>
             </div>
-          </div>
-        )}
 
-        {isMixed && (
+            {(formData.paymentSource === 'revenue' || formData.paymentSource === 'mixed') && (
+              <div className="revenue-info">
+                <div className="available-revenue">
+                  <strong>Available Business Revenue: {fmtUSD(availableRevenue)}</strong>
+                </div>
+              </div>
+            )}
+
+            {isMixed && (
           <div className="form-section mixed-sources-section">
             <h4>Mixed Source Breakdown</h4>
             <div className="form-row">
@@ -269,6 +279,16 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
             {errors.mixedAmounts && <div className="error">{errors.mixedAmounts}</div>}
             <div className="mixed-hint">
               Tip: When you enter one amount, the other will auto-calculate to match your total.
+            </div>
+          </div>
+            )}
+          </>
+        )}
+
+        {isIncome && (
+          <div className="revenue-info">
+            <div className="available-revenue">
+              <strong>Note:</strong> Income transactions will be added to your business revenue and increase your available funds.
             </div>
           </div>
         )}
