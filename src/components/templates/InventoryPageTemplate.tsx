@@ -23,6 +23,9 @@ interface InventoryPageTemplateProps {
   sortOptions: Array<{ value: string; label: string; disabled?: boolean }>;
   totalCount: number;
   filteredCount: number;
+  categoryFilter?: string;
+  onCategoryChange?: (_category: string) => void;
+  categoryOptions?: Array<{ value: string; label: string; disabled?: boolean }>;
 
   // Items Grid
   items: InventoryItem[];
@@ -47,6 +50,9 @@ export function InventoryPageTemplate({
   sortOptions,
   totalCount,
   filteredCount,
+  categoryFilter,
+  onCategoryChange,
+  categoryOptions,
   items,
   onEditItem,
   onDeleteItem,
@@ -69,6 +75,9 @@ export function InventoryPageTemplate({
         sortOptions={sortOptions}
         totalCount={totalCount}
         filteredCount={filteredCount}
+        categoryFilter={categoryFilter}
+        onCategoryChange={onCategoryChange}
+        categoryOptions={categoryOptions}
         placeholder="Search items"
         testId="inventory-filters"
       />

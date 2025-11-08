@@ -15,6 +15,9 @@ interface SearchFiltersProps {
   filteredCount: number;
   placeholder?: string;
   testId?: string;
+  categoryFilter?: string;
+  onCategoryChange?: (_category: string) => void;
+  categoryOptions?: Array<{ value: string; label: string; disabled?: boolean }>;
 }
 
 export function SearchFilters({
@@ -27,8 +30,12 @@ export function SearchFilters({
   filteredCount,
   placeholder = 'Search items',
   testId = 'search-filters',
+  categoryFilter,
+  onCategoryChange,
+  categoryOptions,
 }: SearchFiltersProps) {
   const hasQuery = searchQuery.trim().length > 0;
+  const hasCategoryFilter = categoryFilter && categoryFilter !== '';
 
   return (
     <div className="filters-container" data-testid={testId}>
@@ -42,6 +49,15 @@ export function SearchFilters({
           data-testid={`${testId}-search`}
         />
 
+        {categoryOptions && onCategoryChange && (
+          <SortSelect
+            value={categoryFilter || ''}
+            onChange={e => onCategoryChange(e.target.value || '')}
+            options={categoryOptions}
+            data-testid={`${testId}-category`}
+          />
+        )}
+
         <SortSelect
           value={sortBy}
           onChange={e => onSortChange(e.target.value || '')}
@@ -51,7 +67,7 @@ export function SearchFilters({
       </div>
 
       <div className="results-info-modern" data-testid={`${testId}-results-info`}>
-        {hasQuery ? (
+        {hasQuery || hasCategoryFilter ? (
           <Text variant="small">
             {filteredCount} of {totalCount} items found
           </Text>

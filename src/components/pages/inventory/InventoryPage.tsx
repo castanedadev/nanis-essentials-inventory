@@ -4,6 +4,7 @@ import { InventoryPageTemplate } from '../../templates/InventoryPageTemplate';
 import { SortOption } from '../../molecules/SearchFilters';
 import { DB, InventoryItem } from '../../../types/models';
 import { nowIso } from '../../../lib/utils';
+import { CATEGORIES } from '../../../constants/categories';
 
 interface InventoryPageProps {
   db: DB;
@@ -15,21 +16,32 @@ export function InventoryPage({ db, persist }: InventoryPageProps) {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<InventoryItem | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<string>('');
   const [sortBy, setSortBy] = useState<SortOption>('inStock');
 
   const items = db.items;
 
-  // Filter items based on search query
+  // Filter items based on search query and category
   const filteredItems = useMemo(() => {
-    if (!searchQuery.trim()) return items;
+    let filtered = items;
 
-    const query = searchQuery.toLowerCase().trim();
-    return items.filter(
-      item =>
-        item.name.toLowerCase().includes(query) ||
-        (item.description && item.description.toLowerCase().includes(query))
-    );
-  }, [items, searchQuery]);
+    // Apply category filter
+    if (categoryFilter) {
+      filtered = filtered.filter(item => item.category === categoryFilter);
+    }
+
+    // Apply search query filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(
+        item =>
+          item.name.toLowerCase().includes(query) ||
+          (item.description && item.description.toLowerCase().includes(query))
+      );
+    }
+
+    return filtered;
+  }, [items, searchQuery, categoryFilter]);
 
   const sortedItems = useMemo(() => {
     const copy = [...filteredItems];
@@ -181,6 +193,11 @@ export function InventoryPage({ db, persist }: InventoryPageProps) {
     { value: 'minPriceDesc', label: 'Min Price (High → Low)' },
   ];
 
+  const categoryOptions = [
+    { value: '', label: 'All Categories' },
+    ...CATEGORIES.map(cat => ({ value: cat, label: cat })),
+  ];
+
   const formContent = showForm ? (
     <InventoryForm
       initial={editing ?? undefined}
@@ -206,6 +223,9 @@ export function InventoryPage({ db, persist }: InventoryPageProps) {
       sortOptions={sortOptions}
       totalCount={items.length}
       filteredCount={filteredItems.length}
+      categoryFilter={categoryFilter}
+      onCategoryChange={setCategoryFilter}
+      categoryOptions={categoryOptions}
       items={sortedItems}
       onEditItem={item => {
         setEditing(item);
