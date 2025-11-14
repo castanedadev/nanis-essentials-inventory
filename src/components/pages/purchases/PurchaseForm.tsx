@@ -204,7 +204,20 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
         const unitsLine = l.quantity + (l.hasSubItems ? (l.subItemsQty ?? 0) : 0);
         itemsUpdated = itemsUpdated.map(it => {
           if (it.id !== l.itemId) return it;
-          const nextStock = (it.stock ?? 0) + unitsLine;
+
+          // When editing, first subtract the old purchase quantities
+          let currentStock = it.stock ?? 0;
+          if (initial) {
+            const oldLine = initial.lines.find(oldL => oldL.itemId === l.itemId);
+            if (oldLine) {
+              const oldUnits =
+                oldLine.quantity + (oldLine.hasSubItems ? (oldLine.subItemsQty ?? 0) : 0);
+              currentStock = Math.max(0, currentStock - oldUnits);
+            }
+          }
+
+          // Now add the new quantities
+          const nextStock = currentStock + unitsLine;
           const costPre = l.unitCost;
           const costPost = l.unitCostPostShipping ?? l.unitCost;
           const autoMin = Math.ceil(costPost * 1.2);

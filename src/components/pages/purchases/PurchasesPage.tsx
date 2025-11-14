@@ -34,15 +34,18 @@ export function PurchasesPage({ db, persist }: PurchasesPageProps) {
     updatedWithdrawals?: any[]
   ) => {
     const exists = db.purchases.find(p => p.id === purchase.id);
-    let itemsWorking = [...db.items];
-    if (exists) {
-      exists.lines.forEach(l => {
-        const units = l.quantity + (l.hasSubItems ? (l.subItemsQty ?? 0) : 0);
-        itemsWorking = itemsWorking.map(it =>
-          it.id === l.itemId ? { ...it, stock: Math.max(0, it.stock - units) } : it
-        );
-      });
-    }
+    const itemsWorking = [...db.items];
+
+    // Remove the old purchase quantity subtraction logic since PurchaseForm now handles it
+    // if (exists) {
+    //   exists.lines.forEach(l => {
+    //     const units = l.quantity + (l.hasSubItems ? (l.subItemsQty ?? 0) : 0);
+    //     itemsWorking = itemsWorking.map(it =>
+    //       it.id === l.itemId ? { ...it, stock: Math.max(0, it.stock - units) } : it
+    //     );
+    //   });
+    // }
+
     updatedItems.forEach(ui => {
       const existingIdx = itemsWorking.findIndex(it => it.id === ui.id);
       if (existingIdx >= 0) {
