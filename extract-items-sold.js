@@ -6,10 +6,39 @@ function formatDate(isoString) {
   return new Date(isoString).toLocaleDateString('en-US');
 }
 
-function isSinceSeptember1st(isoString) {
+/**
+ * Gets the full month name from a month index
+ * @param {number} monthIndex - Month index (0-indexed, 0 = January, 11 = December)
+ * @returns {string} - Full month name
+ */
+function getMonthName(monthIndex) {
+  const monthNames = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+  return monthNames[monthIndex];
+}
+
+/**
+ * Checks if a date falls within a specific month and year
+ * @param {string} isoString - ISO date string
+ * @param {number} targetMonth - Target month (0-indexed, 0 = January, 11 = December)
+ * @param {number} targetYear - Target year
+ * @returns {boolean} - True if date is in the specified month/year
+ */
+function isInMonth(isoString, targetMonth, targetYear) {
   const date = new Date(isoString);
-  const september1st = new Date(date.getFullYear(), 8, 1); // Month is 0-indexed, so 8 = September
-  return date >= september1st;
+  return date.getMonth() === targetMonth && date.getFullYear() === targetYear;
 }
 
 function extractItemsSold(backupFilePath) {
@@ -23,12 +52,21 @@ function extractItemsSold(backupFilePath) {
       throw new Error('Invalid backup file - missing sales or items data');
     }
 
+    // Determine target month and year for filtering
+    const now = new Date();
+    const targetMonth = now.getMonth();
+    const targetYear = now.getFullYear();
+
     console.log(`Found ${db.sales.length} total sales in backup`);
     console.log(`Found ${db.items.length} total items in inventory`);
 
-    // Filter sales since September 1st
-    const salesSinceSep1 = db.sales.filter(sale => isSinceSeptember1st(sale.createdAt));
-    console.log(`Found ${salesSinceSep1.length} sales since September 1st`);
+    // Filter sales for the current month
+    const monthlySales = db.sales.filter(sale =>
+      isInMonth(sale.createdAt, targetMonth, targetYear)
+    );
+    console.log(
+      `Found ${monthlySales.length} sales for ${getMonthName(targetMonth)} ${targetYear}`
+    );
 
     // Create a map of items for quick lookup
     const itemsMap = new Map();
@@ -39,7 +77,7 @@ function extractItemsSold(backupFilePath) {
     // Extract and aggregate items sold
     const itemsSoldMap = new Map();
 
-    salesSinceSep1.forEach(sale => {
+    monthlySales.forEach(sale => {
       sale.lines.forEach(line => {
         const item = itemsMap.get(line.itemId);
         if (item) {
@@ -77,7 +115,8 @@ function extractItemsSold(backupFilePath) {
     // Sort by total quantity sold (highest first)
     itemsSold.sort((a, b) => b.totalQuantitySold - a.totalQuantitySold);
 
-    console.log(`\nItems sold since September 1st: ${itemsSold.length} unique items`);
+    const monthName = getMonthName(targetMonth);
+    console.log(`\nItems sold in ${monthName} ${targetYear}: ${itemsSold.length} unique items`);
     console.log('='.repeat(80));
 
     // Generate CSV content
@@ -139,24 +178,7 @@ function extractItemsSold(backupFilePath) {
     );
 
     // Generate filename with current month and year
-    const now = new Date();
-    const monthNames = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
-    const currentMonth = monthNames[now.getMonth()];
-    const currentYear = now.getFullYear();
-    const csvFileName = `${currentMonth} ${currentYear} - NANIS ESSENTIALS.csv`;
+    const csvFileName = `${getMonthName(targetMonth)} ${targetYear} - NANIS ESSENTIALS.csv`;
     fs.writeFileSync(csvFileName, csvLines.join('\n'));
 
     console.log(`\nCSV file generated: ${csvFileName}`);

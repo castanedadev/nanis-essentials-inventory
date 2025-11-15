@@ -51,9 +51,10 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
     const exists = db.transactions.find(t => t.id === transaction.id);
     let updatedDb = { ...db };
 
-    // Process revenue deduction if payment source uses business revenue (not for income)
+    // Process revenue deduction if payment source uses business revenue (not for income or discount)
     if (
       transaction.type !== 'income' &&
+      transaction.type !== 'discount' &&
       (transaction.paymentSource === 'revenue' || transaction.paymentSource === 'mixed')
     ) {
       const { updatedDb: dbWithRevenue, error } = RevenueService.processTransactionWithRevenue(
@@ -89,6 +90,10 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
 
   const totalIncome = filteredTransactions
     .filter(t => t.type === 'income')
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  const totalDiscounts = filteredTransactions
+    .filter(t => t.type === 'discount')
     .reduce((sum, t) => sum + t.amount, 0);
 
   const totalOutgoing = totalExpenses + totalFees;
@@ -136,6 +141,13 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
           </div>
           <div className="muted">Income minus expenses and fees</div>
         </div>
+        {totalDiscounts > 0 && (
+          <div className="summary-card">
+            <h3>Total Discounts</h3>
+            <div className="amount">{fmtUSD(totalDiscounts)}</div>
+            <div className="muted">Tracked discounts (informational only)</div>
+          </div>
+        )}
       </div>
 
       <div className="cards two-cols" data-testid="transaction-cards">
@@ -152,7 +164,13 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
               <div className="card-row">
                 <div
                   className="amount-large"
-                  style={t.type === 'income' ? { color: '#22c55e', fontWeight: 'bold' } : undefined}
+                  style={
+                    t.type === 'income'
+                      ? { color: '#22c55e', fontWeight: 'bold' }
+                      : t.type === 'discount'
+                        ? { color: '#3b82f6', fontWeight: 'bold' }
+                        : undefined
+                  }
                 >
                   {t.type === 'income' ? '+' : ''}
                   {fmtUSD(t.amount)}
@@ -163,13 +181,13 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
                 <div>
                   <b>Category:</b> {t.category}
                 </div>
-                {t.type !== 'income' && (
+                {t.type !== 'income' && t.type !== 'discount' && (
                   <div>
                     <b>Payment:</b> {t.paymentMethod || 'Not specified'}
                   </div>
                 )}
               </div>
-              {t.type !== 'income' && (
+              {t.type !== 'income' && t.type !== 'discount' && (
                 <div className="grid two">
                   <div>
                     <b>Source:</b>{' '}
@@ -210,7 +228,7 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
         {filteredTransactions.length === 0 && (
           <div className="empty">
             {dateFilter === 'overall'
-              ? 'No transactions yet. Add business expenses, fees, income, and other transactions.'
+              ? 'No transactions yet. Add business expenses, fees, income, discounts, and other transactions.'
               : `No transactions found for ${dateFilter === 'current-month' ? 'current month' : 'previous month'}.`}
           </div>
         )}
