@@ -341,11 +341,13 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
                   >
                     + Add New Item
                   </option>
-                  {items.map(i => (
-                    <option key={i.id} value={i.id}>
-                      {i.name}
-                    </option>
-                  ))}
+                  {[...items]
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map(i => (
+                      <option key={i.id} value={i.id}>
+                        {i.name}
+                      </option>
+                    ))}
                 </select>
               </div>
             </div>

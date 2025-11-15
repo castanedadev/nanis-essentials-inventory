@@ -44,6 +44,8 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
   });
 
   const isIncome = formData.type === 'income';
+  const isDiscount = formData.type === 'discount';
+  const isNonFinancial = isIncome || isDiscount; // Types that don't affect revenue calculations
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const isMixed = formData.paymentSource === 'mixed';
@@ -64,16 +66,16 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
       newErrors.category = 'Category is required';
     }
 
-    // Revenue validation (only for expenses/fees, not income)
-    if (!isIncome && formData.paymentSource === 'revenue') {
+    // Revenue validation (only for expenses/fees, not income or discount)
+    if (!isNonFinancial && formData.paymentSource === 'revenue') {
       const totalAmt = parseFloat(formData.amount) || 0;
       if (totalAmt > availableRevenue) {
         newErrors.amount = `Insufficient revenue. Available: ${fmtUSD(availableRevenue)}`;
       }
     }
 
-    // Mixed source validation (only for expenses/fees, not income)
-    if (!isIncome && isMixed) {
+    // Mixed source validation (only for expenses/fees, not income or discount)
+    if (!isNonFinancial && isMixed) {
       const revenueAmt = parseFloat(formData.revenueAmount) || 0;
       const externalAmt = parseFloat(formData.externalAmount) || 0;
       const totalAmt = parseFloat(formData.amount) || 0;
@@ -104,8 +106,8 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
       category: formData.category.trim(),
       notes: formData.notes.trim() || undefined,
       createdAt: initial?.createdAt || new Date().toISOString(),
-      // Income transactions don't need payment info
-      ...(isIncome
+      // Income and discount transactions don't need payment info
+      ...(isNonFinancial
         ? {}
         : {
             paymentMethod: formData.paymentMethod,
@@ -161,6 +163,7 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
               <option value="expense">Business Expense</option>
               <option value="fee">Fee Payment</option>
               <option value="income">Income / Revenue</option>
+              <option value="discount">Discount (Purchase)</option>
             </select>
           </label>
         </div>
@@ -212,7 +215,7 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
           </label>
         </div>
 
-        {!isIncome && (
+        {!isNonFinancial && (
           <>
             <div className="form-row">
               <label>
@@ -290,6 +293,15 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
             <div className="available-revenue">
               <strong>Note:</strong> Income transactions will be added to your business revenue and
               increase your available funds.
+            </div>
+          </div>
+        )}
+
+        {isDiscount && (
+          <div className="revenue-info">
+            <div className="available-revenue">
+              <strong>Note:</strong> Discount transactions are tracked for informational purposes
+              only. They do not affect revenue calculations or financial reports.
             </div>
           </div>
         )}

@@ -180,8 +180,9 @@ export class RevenueService {
   } {
     const withdrawals: RevenueWithdrawal[] = [];
 
-    // Income transactions add to revenue and don't need withdrawals
-    if (transaction.type === 'income') {
+    // Income and discount transactions don't need withdrawals
+    // Income adds to revenue, discounts are informational only
+    if (transaction.type === 'income' || transaction.type === 'discount') {
       return {
         updatedDb: db,
         withdrawals: [],
