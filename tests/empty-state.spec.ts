@@ -47,7 +47,7 @@ test.describe('Empty State Validations', () => {
 
       await expect(
         page.getByText(
-          'No transactions yet. Add business expenses, fees, income, and other transactions.'
+          'No transactions yet. Add business expenses, fees, income, discounts, and other transactions.'
         )
       ).toBeVisible();
       await verifyRevenueWithdrawalsSection(page);
