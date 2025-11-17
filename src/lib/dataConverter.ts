@@ -175,6 +175,7 @@ export function convertOldBackupToNew(oldData: OldBackup): DB {
     settings: { ...DEFAULT_SETTINGS },
     revenueWithdrawals: [], // Legacy data has no revenue withdrawals
     transactions: [], // Legacy data has no transactions
+    branches: [], // Legacy data has no branches
   };
 }
 

@@ -45,6 +45,7 @@ export interface InventoryItem {
   maxRevenue?: number;
   createdAt: string; // ISO
   updatedAt?: string; // ISO
+  branchId?: string; // Branch/store ID - undefined for main inventory
 }
 
 export interface PurchaseLine {
@@ -102,6 +103,14 @@ export interface Sale {
   installments?: InstallmentPlan;
   lines: SaleLine[];
   totalAmount: number;
+  branchId?: string; // Branch/store where sale occurred - undefined for main inventory
+}
+
+export interface Branch {
+  id: string;
+  name: string;
+  createdAt: string; // ISO timestamp
+  closedAt?: string; // ISO timestamp - set when branch is closed
 }
 
 export interface Settings {
@@ -117,6 +126,7 @@ export interface DB {
   settings: Settings;
   revenueWithdrawals: RevenueWithdrawal[]; // Track revenue withdrawals for re-investment
   transactions: Transaction[]; // Track business expenses and fees
+  branches: Branch[]; // Branch/store locations
 }
 
 export interface RevenueWithdrawal {

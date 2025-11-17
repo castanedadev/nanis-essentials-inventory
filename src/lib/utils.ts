@@ -87,3 +87,68 @@ export const isDateInWeek = (iso: string, weekStart: Date, weekEnd: Date) => {
   const date = new Date(iso);
   return date >= weekStart && date <= weekEnd;
 };
+
+/**
+ * Escape CSV field value to handle commas, quotes, and newlines
+ */
+export const escapeCSVField = (value: string | number | undefined | null): string => {
+  if (value === null || value === undefined) return '';
+  const str = String(value);
+  if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+};
+
+/**
+ * Generate CSV content from inventory items
+ */
+export const generateInventoryCSV = (
+  items: Array<{
+    name: string;
+    stock: number;
+    weightLbs?: number;
+    costPostShipping?: number;
+    costPreShipping?: number;
+    minPrice?: number;
+    maxPrice?: number;
+  }>
+): string => {
+  const headers = ['#', 'Item name', 'stock', 'weight', 'Unit Cost', 'price'];
+  // Sort items alphabetically by name
+  const sortedItems = [...items].sort((a, b) => a.name.localeCompare(b.name));
+  const rows = sortedItems.map((item, index) => {
+    const rowNumber = index + 1;
+    const stock = item.stock;
+    const weight = item.weightLbs ?? '';
+    const unitCost = item.costPostShipping ?? item.costPreShipping ?? 0;
+    const price =
+      item.minPrice && item.maxPrice
+        ? `${fmtUSD(item.minPrice)} - ${fmtUSD(item.maxPrice)}`
+        : item.minPrice
+          ? fmtUSD(item.minPrice)
+          : '';
+
+    return [rowNumber, item.name, stock, weight, fmtUSD(unitCost), price]
+      .map(escapeCSVField)
+      .join(',');
+  });
+
+  return [headers.map(escapeCSVField).join(','), ...rows].join('\n');
+};
+
+/**
+ * Download CSV file
+ */
+export const downloadCSV = (csvContent: string, filename: string) => {
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};

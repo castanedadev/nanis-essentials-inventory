@@ -1,7 +1,7 @@
 import React from 'react';
 import { ItemCard } from '../molecules/ItemCard';
 import { Text } from '../atoms/Typography';
-import { InventoryItem } from '../../types/models';
+import { InventoryItem, DB } from '../../types/models';
 
 interface ItemGridProps {
   items: InventoryItem[];
@@ -13,6 +13,7 @@ interface ItemGridProps {
   showNoResults?: boolean;
   testId?: string;
   columns?: 'two' | 'three';
+  db?: DB; // Optional DB for branch name lookup
 }
 
 export function ItemGrid({
@@ -25,13 +26,14 @@ export function ItemGrid({
   showNoResults = false,
   testId = 'inventory-cards',
   columns = 'three',
+  db,
 }: ItemGridProps) {
   const gridClass = columns === 'two' ? 'cards two-cols' : 'cards three-cols';
 
   return (
     <div className={gridClass} data-testid={testId}>
       {items.map(item => (
-        <ItemCard key={item.id} item={item} onEdit={onEdit} onDelete={onDelete} />
+        <ItemCard key={item.id} item={item} onEdit={onEdit} onDelete={onDelete} db={db} />
       ))}
 
       {showEmptyState && (

@@ -24,9 +24,16 @@ export function SalesPage({ db, persist }: SalesPageProps) {
     let itemsWorking = [...db.items];
     if (s) {
       s.lines.forEach(l => {
-        itemsWorking = itemsWorking.map(it =>
-          it.id === l.itemId ? { ...it, stock: it.stock + l.quantity } : it
-        );
+        // Find the item in the correct inventory (main or branch) based on sale's branchId
+        const itemToRestore = s.branchId
+          ? itemsWorking.find(it => it.id === l.itemId && it.branchId === s.branchId)
+          : itemsWorking.find(it => it.id === l.itemId && !it.branchId);
+
+        if (itemToRestore) {
+          itemsWorking = itemsWorking.map(it =>
+            it.id === itemToRestore.id ? { ...it, stock: it.stock + l.quantity } : it
+          );
+        }
       });
     }
     persist({ ...db, items: itemsWorking, sales: db.sales.filter(x => x.id !== id) });
@@ -132,12 +139,20 @@ export function SalesPage({ db, persist }: SalesPageProps) {
     const exists = db.sales.find(s => s.id === sale.id);
     let itemsWorking = [...db.items];
     if (exists) {
+      // Restore stock from the old sale (based on old sale's branchId)
       exists.lines.forEach(l => {
-        itemsWorking = itemsWorking.map(it =>
-          it.id === l.itemId ? { ...it, stock: it.stock + l.quantity } : it
-        );
+        const itemToRestore = exists.branchId
+          ? itemsWorking.find(it => it.id === l.itemId && it.branchId === exists.branchId)
+          : itemsWorking.find(it => it.id === l.itemId && !it.branchId);
+
+        if (itemToRestore) {
+          itemsWorking = itemsWorking.map(it =>
+            it.id === itemToRestore.id ? { ...it, stock: it.stock + l.quantity } : it
+          );
+        }
       });
     }
+    // Apply the new sale's stock changes
     updatedItems.forEach(ui => {
       itemsWorking = itemsWorking.map(it => (it.id === ui.id ? ui : it));
     });
