@@ -6,7 +6,7 @@ test.describe('Empty State Validations', () => {
   });
 
   test('should display inventory empty state', async ({ page }) => {
-    await expect(page.getByText('No items yet.')).toBeVisible();
+    await expect(page.getByText('No x yet.')).toBeVisible();
     await expect(page.getByText('Showing 0 of 0 items')).toBeVisible();
   });
 

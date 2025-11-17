@@ -2,7 +2,7 @@ import React from 'react';
 import { Button } from '../atoms/Button';
 import { Text, Badge } from '../atoms/Typography';
 import { ItemCardImage } from '../ItemImageDisplay';
-import { InventoryItem } from '../../types/models';
+import { InventoryItem, DB } from '../../types/models';
 import { fmtUSD } from '../../lib/utils';
 
 interface ItemCardProps {
@@ -10,12 +10,14 @@ interface ItemCardProps {
   onEdit: (_item: InventoryItem) => void;
   onDelete: (_id: string) => void;
   testId?: string;
+  db?: DB; // Optional DB for branch name lookup
 }
 
-export function ItemCard({ item, onEdit, onDelete, testId = 'item-card' }: ItemCardProps) {
+export function ItemCard({ item, onEdit, onDelete, testId = 'item-card', db }: ItemCardProps) {
   const isOutOfStock = item.stock === 0;
   const isLastItem = item.stock === 1;
   const unitCost = item.costPostShipping ?? item.costPreShipping ?? 0;
+  const branchName = item.branchId && db?.branches?.find(b => b.id === item.branchId)?.name;
 
   return (
     <div
@@ -29,7 +31,14 @@ export function ItemCard({ item, onEdit, onDelete, testId = 'item-card' }: ItemC
           <h3 className="item-card-title">{item.name}</h3>
           <span className="item-card-date">{new Date(item.createdAt).toLocaleDateString()}</span>
         </div>
-        <div className="item-card-category-badge">{item.category}</div>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          {branchName && (
+            <Badge variant="default" className="badge-small">
+              {branchName}
+            </Badge>
+          )}
+          <div className="item-card-category-badge">{item.category}</div>
+        </div>
       </div>
 
       {/* Main Content */}

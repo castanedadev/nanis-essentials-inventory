@@ -33,6 +33,7 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
     initial?.paymentMethod ?? 'cash'
   );
   const [channel, setChannel] = useState<SalesChannel | ''>(initial?.channel ?? '');
+  const [branchId, setBranchId] = useState<string | ''>(initial?.branchId ?? '');
   const [numberOfPayments, setNumberOfPayments] = useState<number>(
     initial?.installments?.numberOfPayments ?? 2
   );
@@ -93,6 +94,7 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
       buyerName: buyerName.trim() || undefined,
       paymentMethod,
       channel: channel || undefined,
+      branchId: branchId || undefined,
       installments:
         paymentMethod === 'installments' ? { numberOfPayments, amountPerPayment } : undefined,
       lines,
@@ -101,11 +103,18 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
 
     let itemsUpdated = [...db.items];
     lines.forEach(l => {
-      itemsUpdated = itemsUpdated.map(it => {
-        if (it.id !== l.itemId) return it;
-        const next = Math.max(0, it.stock - l.quantity);
-        return { ...it, stock: next, updatedAt: nowIso() };
-      });
+      // Find the item in the correct inventory (main or branch)
+      const itemToUpdate = branchId
+        ? itemsUpdated.find(it => it.id === l.itemId && it.branchId === branchId)
+        : itemsUpdated.find(it => it.id === l.itemId && !it.branchId);
+
+      if (itemToUpdate) {
+        itemsUpdated = itemsUpdated.map(it => {
+          if (it.id !== itemToUpdate.id) return it;
+          const next = Math.max(0, it.stock - l.quantity);
+          return { ...it, stock: next, updatedAt: nowIso() };
+        });
+      }
     });
 
     onSave(s, itemsUpdated);
@@ -150,7 +159,13 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
                     Select Item
                   </option>
                   {db.items
-                    .filter(i => i.stock > 0)
+                    .filter(i => {
+                      // Filter by branch if selected, otherwise show main inventory
+                      if (branchId) {
+                        return i.stock > 0 && i.branchId === branchId;
+                      }
+                      return i.stock > 0 && !i.branchId;
+                    })
                     .slice()
                     .sort((a, b) => a.name.localeCompare(b.name))
                     .map(i => (
@@ -283,6 +298,19 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
             <option value="tiktok">TikTok</option>
             <option value="family_friends">Family/Friends</option>
             <option value="other">Other</option>
+          </select>
+        </div>
+        <div>
+          <label>Where was this sold? (optional)</label>
+          <select value={branchId} onChange={e => setBranchId(e.target.value)}>
+            <option value="">Main Inventory</option>
+            {db.branches
+              ?.filter(b => !b.closedAt)
+              .map(branch => (
+                <option key={branch.id} value={branch.id}>
+                  {branch.name}
+                </option>
+              ))}
           </select>
         </div>
         <div>

@@ -2636,6 +2636,10 @@ input::placeholder {
   align-items: center;
 }
 
+.badge-small {
+  font-size: 0.75rem;
+}
+
 .badge {
   display: inline-block;
   padding: 4px 8px;

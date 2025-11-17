@@ -13,6 +13,7 @@ export function loadDB(): DB {
       settings: { ...DEFAULT_SETTINGS },
       revenueWithdrawals: [],
       transactions: [],
+      branches: [],
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(empty));
     return empty;
@@ -22,6 +23,21 @@ export function loadDB(): DB {
     if (!parsed.settings) parsed.settings = { ...DEFAULT_SETTINGS };
     if (!parsed.revenueWithdrawals) parsed.revenueWithdrawals = [];
     if (!parsed.transactions) parsed.transactions = [];
+    if (!parsed.branches) parsed.branches = [];
+    // Ensure backward compatibility: add branchId to items if missing
+    if (parsed.items) {
+      parsed.items = parsed.items.map(item => ({
+        ...item,
+        branchId: item.branchId ?? undefined,
+      }));
+    }
+    // Ensure backward compatibility: add branchId to sales if missing
+    if (parsed.sales) {
+      parsed.sales = parsed.sales.map(sale => ({
+        ...sale,
+        branchId: sale.branchId ?? undefined,
+      }));
+    }
     return parsed;
   } catch {
     const empty: DB = {
@@ -31,6 +47,7 @@ export function loadDB(): DB {
       settings: { ...DEFAULT_SETTINGS },
       revenueWithdrawals: [],
       transactions: [],
+      branches: [],
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(empty));
     return empty;
@@ -60,6 +77,7 @@ export function importBackup(json: string) {
       if (!parsed.settings) parsed.settings = { ...DEFAULT_SETTINGS };
       if (!parsed.revenueWithdrawals) parsed.revenueWithdrawals = [];
       if (!parsed.transactions) parsed.transactions = [];
+      if (!parsed.branches) parsed.branches = [];
       dbData = parsed as DB;
     } else if ('items' in parsed) {
       // Old format - convert it
